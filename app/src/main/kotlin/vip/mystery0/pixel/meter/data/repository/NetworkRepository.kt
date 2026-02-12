@@ -103,6 +103,9 @@ class NetworkRepository(
     private val _isAutoStartServiceEnabled = MutableStateFlow(false)
     val isAutoStartServiceEnabled: StateFlow<Boolean> = _isAutoStartServiceEnabled.asStateFlow()
 
+    private val _speedUnit = MutableStateFlow(0)
+    val speedUnit: StateFlow<Int> = _speedUnit.asStateFlow()
+
     private var monitoringJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Default)
 
@@ -155,6 +158,7 @@ class NetworkRepository(
                 _notificationUseCustomColor.value =
                     prefs[DataStoreRepository.KEY_NOTIFICATION_USE_CUSTOM_COLOR] ?: false
                 _notificationColor.value = prefs[DataStoreRepository.KEY_NOTIFICATION_COLOR] ?: 0
+                _speedUnit.value = prefs[DataStoreRepository.KEY_SPEED_UNIT] ?: 0
             }
         }
         scope.launch {
@@ -252,6 +256,11 @@ class NetworkRepository(
         scope.launch {
             dataStoreRepository.notificationColor.collect {
                 _notificationColor.value = it
+            }
+        }
+        scope.launch {
+            dataStoreRepository.speedUnit.collect {
+                _speedUnit.value = it
             }
         }
     }
@@ -356,6 +365,10 @@ class NetworkRepository(
         scope.launch { dataStoreRepository.setNotificationColor(color) }
     }
 
+    fun setSpeedUnit(unit: Int) {
+        scope.launch { dataStoreRepository.setSpeedUnit(unit) }
+    }
+
     suspend fun getOverlayPosition(): Pair<Int, Int> {
         val x = dataStoreRepository.overlayX.first()
         val y = dataStoreRepository.overlayY.first()
@@ -434,7 +447,26 @@ class NetworkRepository(
     companion object {
         private const val TAG = "NetworkRepository"
 
-        fun formatSpeedTextForLiveUpdate(bytes: Long): String {
+        /**
+         * 根据数值大小格式化小数位数：>= 100 → 0 位，>= 10 → 1 位，否则 2 位
+         */
+        private fun formatFixedValue(value: Double): String {
+            val pattern = when {
+                value >= 100 -> "%.0f"
+                value >= 10 -> "%.1f"
+                else -> "%.2f"
+            }
+            return pattern.format(Locale.getDefault(), value)
+        }
+
+        fun formatSpeedTextForLiveUpdate(bytes: Long, speedUnit: Int = 0): String {
+            when (speedUnit) {
+                1 -> return "${formatFixedValue(bytes.toDouble())}B/s"
+                2 -> return "${formatFixedValue(bytes / 1024.0)}K/s"
+                3 -> return "${formatFixedValue(bytes / 1048576.0)}M/s"
+                4 -> return "${formatFixedValue(bytes / 1073741824.0)}G/s"
+            }
+            // 自动模式（原有逻辑）
             if (bytes < 1024) return "${bytes}B/s"
             val kb = bytes / 1024.0
             if (kb < 1000) return "${"%.0f".format(Locale.getDefault(), kb)}K/s"
@@ -447,7 +479,14 @@ class NetworkRepository(
             return "${"%.1f".format(Locale.getDefault(), gb)}G/s"
         }
 
-        fun formatSpeedText(bytes: Long): Pair<String, String> {
+        fun formatSpeedText(bytes: Long, speedUnit: Int = 0): Pair<String, String> {
+            when (speedUnit) {
+                1 -> return formatFixedValue(bytes.toDouble()) to "B/s"
+                2 -> return formatFixedValue(bytes / 1024.0) to "KB/s"
+                3 -> return formatFixedValue(bytes / 1048576.0) to "MB/s"
+                4 -> return formatFixedValue(bytes / 1073741824.0) to "GB/s"
+            }
+            // 自动模式（原有逻辑）
             if (bytes < 1024) return bytes.toString() to "B/s"
             val kb = bytes / 1024.0
             if (kb < 1000) return "%.0f".format(Locale.getDefault(), kb) to "KB/s"
@@ -460,8 +499,8 @@ class NetworkRepository(
             return "%.1f".format(Locale.getDefault(), gb) to "GB/s"
         }
 
-        fun formatSpeedLine(bytes: Long): String {
-            val (v, u) = formatSpeedText(bytes)
+        fun formatSpeedLine(bytes: Long, speedUnit: Int = 0): String {
+            val (v, u) = formatSpeedText(bytes, speedUnit)
             return "$v$u"
         }
     }

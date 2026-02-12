@@ -30,6 +30,8 @@ class MainViewModel(
     val isNotificationEnabled = repository.isNotificationEnabled
     val isHideFromRecents = repository.isHideFromRecents
 
+    val speedUnit = repository.speedUnit
+
     val isServiceRunning = repository.isMonitoring
 
     private val _serviceStartError = MutableStateFlow<Pair<String, String>?>(null)

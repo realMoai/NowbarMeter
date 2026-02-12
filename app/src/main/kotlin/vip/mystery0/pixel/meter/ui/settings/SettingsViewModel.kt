@@ -55,6 +55,7 @@ class SettingsViewModel(
 
     // General Settings
     val samplingInterval = repository.samplingInterval
+    val speedUnit = repository.speedUnit
     val isHideFromRecents = repository.isHideFromRecents
     val isOverlayUseDefaultColors = repository.isOverlayUseDefaultColors
     val isAutoStartServiceEnabled = repository.isAutoStartServiceEnabled
@@ -126,4 +127,6 @@ class SettingsViewModel(
 
     fun setAutoStartServiceEnabled(enabled: Boolean) =
         repository.setAutoStartServiceEnabled(enabled)
+
+    fun setSpeedUnit(unit: Int) = repository.setSpeedUnit(unit)
 }

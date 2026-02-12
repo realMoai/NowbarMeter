@@ -108,6 +108,7 @@ class OverlayWindow(
                     val textDown by repository.overlayTextDown.collectAsState()
                     val upFirst by repository.overlayOrderUpFirst.collectAsState()
                     val isOverlayUseDefaultColors by repository.isOverlayUseDefaultColors.collectAsState()
+                    val speedUnit by repository.speedUnit.collectAsState()
 
                     OverlayContent(
                         speed = speedState,
@@ -119,6 +120,7 @@ class OverlayWindow(
                         textUp = textUp,
                         textDown = textDown,
                         upFirst = upFirst,
+                        speedUnit = speedUnit,
                         onDrag = { x, y ->
                             if (!isLocked) {
                                 params?.let { p ->
@@ -174,6 +176,7 @@ fun OverlayContent(
     textUp: String,
     textDown: String,
     upFirst: Boolean,
+    speedUnit: Int = 0,
     onDrag: (Float, Float) -> Unit,
     onDragEnd: () -> Unit
 ) {
@@ -190,8 +193,9 @@ fun OverlayContent(
             )
         }
     ) {
-        val upText = "$textUp${NetworkRepository.formatSpeedLine(speed.uploadSpeed)}"
-        val downText = "$textDown${NetworkRepository.formatSpeedLine(speed.downloadSpeed)}"
+        val upText = "$textUp${NetworkRepository.formatSpeedLine(speed.uploadSpeed, speedUnit)}"
+        val downText =
+            "$textDown${NetworkRepository.formatSpeedLine(speed.downloadSpeed, speedUnit)}"
 
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),

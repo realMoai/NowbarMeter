@@ -55,6 +55,7 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
         val KEY_NOTIFICATION_USE_CUSTOM_COLOR =
             booleanPreferencesKey("key_notification_use_custom_color")
         val KEY_NOTIFICATION_COLOR = intPreferencesKey("key_notification_color")
+        val KEY_SPEED_UNIT = intPreferencesKey("key_speed_unit")
     }
 
     val isLiveUpdateEnabled: Flow<Boolean> = dataStore.data
@@ -349,6 +350,17 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun setAutoStartServiceEnabled(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[KEY_AUTO_START_SERVICE] = enabled
+        }
+    }
+
+    val speedUnit: Flow<Int> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_SPEED_UNIT] ?: 0
+        }
+
+    suspend fun setSpeedUnit(unit: Int) {
+        dataStore.edit { preferences ->
+            preferences[KEY_SPEED_UNIT] = unit
         }
     }
 }

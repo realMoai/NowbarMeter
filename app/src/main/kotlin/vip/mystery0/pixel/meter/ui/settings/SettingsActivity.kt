@@ -137,6 +137,7 @@ class SettingsActivity : ComponentActivity() {
 fun GeneralSection(viewModel: SettingsViewModel) {
     val context = LocalContext.current
     val interval by viewModel.samplingInterval.collectAsState(initial = 1500L)
+    val speedUnit by viewModel.speedUnit.collectAsState(initial = 0)
     val isAutoStartEnabled by viewModel.isAutoStartServiceEnabled.collectAsState(initial = false)
     val canEnableAutoStart by viewModel.canEnableAutoStart.collectAsState()
     val hasOverlayPermission by viewModel.canOverlay.collectAsState()
@@ -156,6 +157,31 @@ fun GeneralSection(viewModel: SettingsViewModel) {
         valueText = { Text("${interval}ms") }
     )
 
+    val labelAuto = stringResource(R.string.settings_speed_unit_auto)
+    val speedUnitValues = listOf(labelAuto, "B/s", "KB/s", "MB/s", "GB/s")
+    val speedUnitLabel = when (speedUnit) {
+        1 -> "B/s"
+        2 -> "KB/s"
+        3 -> "MB/s"
+        4 -> "GB/s"
+        else -> labelAuto
+    }
+    ListPreference(
+        value = speedUnitLabel,
+        onValueChange = {
+            val unit = when (it) {
+                "B/s" -> 1
+                "KB/s" -> 2
+                "MB/s" -> 3
+                "GB/s" -> 4
+                else -> 0
+            }
+            viewModel.setSpeedUnit(unit)
+        },
+        title = { Text(stringResource(R.string.settings_speed_unit_title)) },
+        values = speedUnitValues,
+        summary = { Text(stringResource(R.string.settings_speed_unit_desc)) }
+    )
 
     val autoStartSummary = if (canEnableAutoStart) {
         stringResource(R.string.settings_auto_start_service_desc)

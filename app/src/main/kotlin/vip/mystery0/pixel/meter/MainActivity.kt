@@ -49,11 +49,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import vip.mystery0.pixel.meter.data.repository.NetworkRepository
 import vip.mystery0.pixel.meter.data.source.NetSpeedData
 import vip.mystery0.pixel.meter.ui.MainViewModel
 import vip.mystery0.pixel.meter.ui.settings.SettingsActivity
 import vip.mystery0.pixel.meter.ui.theme.PixelPulseTheme
-import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<MainViewModel>()
@@ -85,6 +85,7 @@ class MainActivity : ComponentActivity() {
         val isNotificationEnabled by viewModel.isNotificationEnabled.collectAsState()
         val isHideFromRecents by viewModel.isHideFromRecents.collectAsState(initial = false)
         val serviceError by viewModel.serviceStartError.collectAsState()
+        val speedUnit by viewModel.speedUnit.collectAsState()
 
         LaunchedEffect(isHideFromRecents) {
             val activityManager =
@@ -132,7 +133,7 @@ class MainActivity : ComponentActivity() {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    SpeedDashboardCard(speed)
+                    SpeedDashboardCard(speed, speedUnit)
                 }
 
                 // Service Permission Error Card
@@ -330,7 +331,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun SpeedDashboardCard(speed: NetSpeedData) {
+fun SpeedDashboardCard(speed: NetSpeedData, speedUnit: Int = 0) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -345,7 +346,7 @@ fun SpeedDashboardCard(speed: NetSpeedData) {
                 style = MaterialTheme.typography.labelMedium
             )
             Text(
-                formatSpeed(speed.totalSpeed),
+                NetworkRepository.formatSpeedLine(speed.totalSpeed, speedUnit),
                 style = MaterialTheme.typography.displayMedium,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -360,7 +361,7 @@ fun SpeedDashboardCard(speed: NetSpeedData) {
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        "▼ " + formatSpeed(speed.downloadSpeed),
+                        "▼ " + NetworkRepository.formatSpeedLine(speed.downloadSpeed, speedUnit),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -370,7 +371,7 @@ fun SpeedDashboardCard(speed: NetSpeedData) {
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        "▲ " + formatSpeed(speed.uploadSpeed),
+                        "▲ " + NetworkRepository.formatSpeedLine(speed.uploadSpeed, speedUnit),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -408,14 +409,4 @@ fun ConfigRow(
             enabled = enabled
         )
     }
-}
-
-private fun formatSpeed(bytes: Long): String {
-    if (bytes < 1024) return "$bytes B/s"
-    val kb = bytes / 1024.0
-    if (kb < 1000) return "%.0f K/s".format(Locale.US, kb)
-    val mb = kb / 1024.0
-    if (mb < 1000) return "%.1f M/s".format(Locale.US, mb)
-    val gb = mb / 1024.0
-    return "%.2f G/s".format(Locale.US, gb)
 }

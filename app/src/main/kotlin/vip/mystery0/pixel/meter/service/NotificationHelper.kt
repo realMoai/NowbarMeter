@@ -88,7 +88,8 @@ class NotificationHelper(private val context: Context) {
         threshold: Long = 0L,
         lowTrafficMode: Int = 0, // 0: Static, 1: Dynamic
         useCustomColor: Boolean = false,
-        color: Int = 0
+        color: Int = 0,
+        speedUnit: Int = 0
     ): Notification {
         var shouldLiveUpdate = isLiveUpdate
         val intent = Intent().apply {
@@ -140,9 +141,11 @@ class NotificationHelper(private val context: Context) {
         // Notification Enabled (Dynamic Mode)
         if (shouldLiveUpdate) {
             // Live Update Mode
-            val statusText = NetworkRepository.formatSpeedTextForLiveUpdate(speed.totalSpeed)
-            val upText = "$textUp${NetworkRepository.formatSpeedLine(speed.uploadSpeed)}"
-            val downText = "$textDown${NetworkRepository.formatSpeedLine(speed.downloadSpeed)}"
+            val statusText =
+                NetworkRepository.formatSpeedTextForLiveUpdate(speed.totalSpeed, speedUnit)
+            val upText = "$textUp${NetworkRepository.formatSpeedLine(speed.uploadSpeed, speedUnit)}"
+            val downText =
+                "$textDown${NetworkRepository.formatSpeedLine(speed.downloadSpeed, speedUnit)}"
 
             val contentText = when (displayMode) {
                 1 -> upText // Up Only
@@ -158,7 +161,7 @@ class NotificationHelper(private val context: Context) {
                 .setRequestPromotedOngoing(true)
         } else {
             // Standard Mode
-            val (valueStr, unitStr) = NetworkRepository.formatSpeedText(speed.totalSpeed)
+            val (valueStr, unitStr) = NetworkRepository.formatSpeedText(speed.totalSpeed, speedUnit)
 
             // Draw Bitmap with speed
             bitmap.eraseColor(Color.TRANSPARENT)
@@ -175,8 +178,9 @@ class NotificationHelper(private val context: Context) {
 
             val smallIcon = IconCompat.createWithBitmap(bitmap)
 
-            val upText = "$textUp${NetworkRepository.formatSpeedLine(speed.uploadSpeed)}"
-            val downText = "$textDown${NetworkRepository.formatSpeedLine(speed.downloadSpeed)}"
+            val upText = "$textUp${NetworkRepository.formatSpeedLine(speed.uploadSpeed, speedUnit)}"
+            val downText =
+                "$textDown${NetworkRepository.formatSpeedLine(speed.downloadSpeed, speedUnit)}"
 
             val contentText = when (displayMode) {
                 1 -> upText // Up Only
