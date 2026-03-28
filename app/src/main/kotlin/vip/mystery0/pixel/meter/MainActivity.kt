@@ -1,4 +1,4 @@
-package vip.mystery0.pixel.meter
+package com.kakao.taxi
 
 import android.Manifest
 import android.content.Context
@@ -49,11 +49,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
-import vip.mystery0.pixel.meter.data.source.NetSpeedData
-import vip.mystery0.pixel.meter.ui.MainViewModel
-import vip.mystery0.pixel.meter.ui.settings.SettingsActivity
-import vip.mystery0.pixel.meter.ui.theme.PixelPulseTheme
+import com.kakao.taxi.data.repository.NetworkRepository
+import com.kakao.taxi.data.source.NetSpeedData
+import com.kakao.taxi.ui.MainViewModel
+import com.kakao.taxi.ui.settings.SettingsActivity
+import com.kakao.taxi.ui.theme.PixelPulseTheme
 
 class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<MainViewModel>()

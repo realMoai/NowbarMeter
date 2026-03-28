@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-val packageName = "vip.mystery0.pixel.meter"
+val packageName = "com.kakao.taxi"
 val gitVersionCode: Int = providers.exec {
     commandLine(
         "git",

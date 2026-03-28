@@ -1,4 +1,4 @@
-package vip.mystery0.pixel.meter.service
+package com.kakao.taxi.service
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -14,10 +14,10 @@ import android.graphics.Typeface
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.IconCompat
-import vip.mystery0.pixel.meter.MainActivity
-import vip.mystery0.pixel.meter.R
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
-import vip.mystery0.pixel.meter.data.source.NetSpeedData
+import com.kakao.taxi.MainActivity
+import com.kakao.taxi.R
+import com.kakao.taxi.data.repository.NetworkRepository
+import com.kakao.taxi.data.source.NetSpeedData
 import kotlin.math.roundToInt
 
 class NotificationHelper(private val context: Context) {

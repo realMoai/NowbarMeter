@@ -1,4 +1,4 @@
-package vip.mystery0.pixel.meter.service.tile
+package com.kakao.taxi.service.tile
 
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
@@ -7,8 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import vip.mystery0.pixel.meter.R
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
+import com.kakao.taxi.R
+import com.kakao.taxi.data.repository.NetworkRepository
 
 class NotificationTileService : TileService() {
     private val networkRepository: NetworkRepository by inject()

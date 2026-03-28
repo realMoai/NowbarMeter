@@ -1,4 +1,4 @@
-package vip.mystery0.pixel.meter.data.source.impl
+package com.kakao.taxi.data.source.impl
 
 import android.net.ConnectivityManager
 import android.net.LinkProperties
@@ -10,8 +10,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
-import vip.mystery0.pixel.meter.data.source.ISpeedDataSource
-import vip.mystery0.pixel.meter.data.source.NetworkTrafficData
+import com.kakao.taxi.data.source.ISpeedDataSource
+import com.kakao.taxi.data.source.NetworkTrafficData
 import java.util.concurrent.ConcurrentHashMap
 
 class SpeedDataSource(

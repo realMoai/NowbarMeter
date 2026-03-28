@@ -1,4 +1,4 @@
-package vip.mystery0.pixel.meter.ui.settings
+package com.kakao.taxi.ui.settings
 
 import android.content.Intent
 import android.os.Bundle
@@ -66,10 +66,10 @@ import me.zhanghai.compose.preference.SliderPreference
 import me.zhanghai.compose.preference.SwitchPreference
 import me.zhanghai.compose.preference.TextFieldPreference
 import me.zhanghai.compose.preference.TwoTargetPreference
-import vip.mystery0.pixel.meter.BuildConfig
-import vip.mystery0.pixel.meter.R
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
-import vip.mystery0.pixel.meter.ui.theme.PixelPulseTheme
+import com.kakao.taxi.BuildConfig
+import com.kakao.taxi.R
+import com.kakao.taxi.data.repository.NetworkRepository
+import com.kakao.taxi.ui.theme.PixelPulseTheme
 import java.util.Locale
 
 class SettingsActivity : ComponentActivity() {

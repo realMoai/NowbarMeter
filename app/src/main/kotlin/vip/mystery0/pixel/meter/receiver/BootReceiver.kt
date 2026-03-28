@@ -1,4 +1,4 @@
-package vip.mystery0.pixel.meter.receiver
+package com.kakao.taxi.receiver
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -6,8 +6,8 @@ import android.content.Intent
 import android.util.Log
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
-import vip.mystery0.pixel.meter.service.NetworkMonitorService
+import com.kakao.taxi.data.repository.NetworkRepository
+import com.kakao.taxi.service.NetworkMonitorService
 
 class BootReceiver : BroadcastReceiver(), KoinComponent {
     companion object {

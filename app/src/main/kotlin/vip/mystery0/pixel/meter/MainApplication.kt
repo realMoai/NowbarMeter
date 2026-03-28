@@ -1,11 +1,11 @@
-package vip.mystery0.pixel.meter
+package com.kakao.taxi
 
 import android.app.Application
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
-import vip.mystery0.pixel.meter.di.appModule
-import vip.mystery0.pixel.meter.service.NotificationHelper
+import com.kakao.taxi.di.appModule
+import com.kakao.taxi.service.NotificationHelper
 
 class MainApplication : Application() {
     override fun onCreate() {

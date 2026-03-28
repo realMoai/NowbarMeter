@@ -1,4 +1,4 @@
-package vip.mystery0.pixel.meter.ui.theme
+package com.kakao.taxi.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

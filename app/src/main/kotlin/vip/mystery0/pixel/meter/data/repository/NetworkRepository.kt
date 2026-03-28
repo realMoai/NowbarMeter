@@ -1,4 +1,4 @@
-package vip.mystery0.pixel.meter.data.repository
+package com.kakao.taxi.data.repository
 
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
@@ -14,8 +14,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
-import vip.mystery0.pixel.meter.data.source.NetSpeedData
-import vip.mystery0.pixel.meter.data.source.impl.SpeedDataSource
+import com.kakao.taxi.data.source.NetSpeedData
+import com.kakao.taxi.data.source.impl.SpeedDataSource
 import java.util.Locale
 
 class NetworkRepository(

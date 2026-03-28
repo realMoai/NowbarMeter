@@ -1,4 +1,4 @@
-package vip.mystery0.pixel.meter.ui.settings
+package com.kakao.taxi.ui.settings
 
 import android.Manifest
 import android.app.Application
@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
+import com.kakao.taxi.data.repository.NetworkRepository
 import android.os.PowerManager as AndroidPowerManager
 
 class SettingsViewModel(

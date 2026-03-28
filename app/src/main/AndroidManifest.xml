@@ -22,6 +22,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PixelMeter"
         tools:targetApi="33">
+        <meta-data
+            android:name="com.samsung.android.support.ongoing_activity"
+            android:value="true" />
 
         <activity
             android:name=".MainActivity"

@@ -1,4 +1,4 @@
-package vip.mystery0.pixel.meter.ui
+package com.kakao.taxi.ui
 
 import android.app.Application
 import android.content.Intent
@@ -11,9 +11,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import vip.mystery0.pixel.meter.R
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
-import vip.mystery0.pixel.meter.service.NetworkMonitorService
+import com.kakao.taxi.R
+import com.kakao.taxi.data.repository.NetworkRepository
+import com.kakao.taxi.service.NetworkMonitorService
 
 class MainViewModel(
     private val application: Application,

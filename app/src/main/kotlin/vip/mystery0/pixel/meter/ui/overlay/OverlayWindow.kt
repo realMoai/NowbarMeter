@@ -1,4 +1,4 @@
-package vip.mystery0.pixel.meter.ui.overlay
+package com.kakao.taxi.ui.overlay
 
 import android.content.Context
 import android.graphics.PixelFormat
@@ -39,9 +39,9 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import kotlinx.coroutines.launch
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
-import vip.mystery0.pixel.meter.data.source.NetSpeedData
-import vip.mystery0.pixel.meter.ui.theme.PixelPulseTheme
+import com.kakao.taxi.data.repository.NetworkRepository
+import com.kakao.taxi.data.source.NetSpeedData
+import com.kakao.taxi.ui.theme.PixelPulseTheme
 import kotlin.math.roundToInt
 
 class OverlayWindow(

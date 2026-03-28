@@ -1,4 +1,4 @@
-package vip.mystery0.pixel.meter.di
+package com.kakao.taxi.di
 
 import android.app.NotificationManager
 import android.content.Context
@@ -6,12 +6,12 @@ import android.net.ConnectivityManager
 import android.os.PowerManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
-import vip.mystery0.pixel.meter.data.repository.DataStoreRepository
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
-import vip.mystery0.pixel.meter.data.repository.dataStore
-import vip.mystery0.pixel.meter.data.source.impl.SpeedDataSource
-import vip.mystery0.pixel.meter.service.NotificationHelper
-import vip.mystery0.pixel.meter.ui.overlay.OverlayWindow
+import com.kakao.taxi.data.repository.DataStoreRepository
+import com.kakao.taxi.data.repository.NetworkRepository
+import com.kakao.taxi.data.repository.dataStore
+import com.kakao.taxi.data.source.impl.SpeedDataSource
+import com.kakao.taxi.service.NotificationHelper
+import com.kakao.taxi.ui.overlay.OverlayWindow
 
 val appModule = module {
     single { androidContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager }
