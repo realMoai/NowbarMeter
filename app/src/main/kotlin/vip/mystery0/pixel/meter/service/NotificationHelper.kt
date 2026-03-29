@@ -89,7 +89,7 @@ class NotificationHelper(private val context: Context) {
         lowTrafficMode: Int = 0, // 0: Static, 1: Dynamic
         useCustomColor: Boolean = false,
         color: Int = 0,
-        speedUnit: Int = 0
+        speedUnit: String = "0"
     ): Notification {
         var shouldLiveUpdate = isLiveUpdate
         val intent = Intent().apply {

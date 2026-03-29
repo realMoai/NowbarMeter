@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +42,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -79,7 +82,8 @@ class SettingsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            PixelPulseTheme {
+            val isOledTheme by viewModel.isOledThemeEnabled.collectAsState(initial = false)
+            PixelPulseTheme(isOledTheme = isOledTheme) {
                 SettingsScreen()
             }
         }
@@ -137,8 +141,9 @@ class SettingsActivity : ComponentActivity() {
 fun GeneralSection(viewModel: SettingsViewModel) {
     val context = LocalContext.current
     val interval by viewModel.samplingInterval.collectAsState(initial = 1500L)
-    val speedUnit by viewModel.speedUnit.collectAsState(initial = 0)
+    val speedUnit by viewModel.speedUnit.collectAsState(initial = "0")
     val isAutoStartEnabled by viewModel.isAutoStartServiceEnabled.collectAsState(initial = false)
+    val isOledThemeEnabled by viewModel.isOledThemeEnabled.collectAsState(initial = false)
     val canEnableAutoStart by viewModel.canEnableAutoStart.collectAsState()
     val hasOverlayPermission by viewModel.canOverlay.collectAsState()
     val hasNotificationPermission by viewModel.hasNotificationPermission.collectAsState()
@@ -157,30 +162,16 @@ fun GeneralSection(viewModel: SettingsViewModel) {
         valueText = { Text("${interval}ms") }
     )
 
-    val labelAuto = stringResource(R.string.settings_speed_unit_auto)
-    val speedUnitValues = listOf(labelAuto, "B/s", "KB/s", "MB/s", "GB/s")
-    val speedUnitLabel = when (speedUnit) {
-        1 -> "B/s"
-        2 -> "KB/s"
-        3 -> "MB/s"
-        4 -> "GB/s"
-        else -> labelAuto
-    }
-    ListPreference(
-        value = speedUnitLabel,
-        onValueChange = {
-            val unit = when (it) {
-                "B/s" -> 1
-                "KB/s" -> 2
-                "MB/s" -> 3
-                "GB/s" -> 4
-                else -> 0
-            }
-            viewModel.setSpeedUnit(unit)
-        },
-        title = { Text(stringResource(R.string.settings_speed_unit_title)) },
-        values = speedUnitValues,
-        summary = { Text(stringResource(R.string.settings_speed_unit_desc)) }
+    SpeedUnitPreference(
+        currentValue = speedUnit,
+        onValueChange = { viewModel.setSpeedUnit(it) }
+    )
+
+    SwitchPreference(
+        value = isOledThemeEnabled,
+        onValueChange = { viewModel.setOledThemeEnabled(it) },
+        title = { Text(stringResource(R.string.settings_oled_theme_title)) },
+        summary = { Text(stringResource(R.string.settings_oled_theme_desc)) }
     )
 
     val autoStartSummary = if (canEnableAutoStart) {
@@ -227,6 +218,80 @@ fun GeneralSection(viewModel: SettingsViewModel) {
             context.startActivity(intent)
         }
     )
+}
+
+@Composable
+fun SpeedUnitPreference(
+    currentValue: String,
+    onValueChange: (String) -> Unit
+) {
+    val selectedUnits = remember(currentValue) {
+        currentValue.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
+    }
+
+    var showDialog by remember { mutableStateOf(false) }
+
+    val labelAuto = stringResource(R.string.settings_speed_unit_auto)
+    val units = listOf(
+        0 to labelAuto,
+        1 to "B/s",
+        2 to "KB/s",
+        3 to "MB/s",
+        4 to "GB/s"
+    )
+
+    val summary = if (selectedUnits.isEmpty() || selectedUnits.contains(0)) {
+        labelAuto
+    } else {
+        units.filter { it.first in selectedUnits }.joinToString(", ") { it.second }
+    }
+
+    Preference(
+        title = { Text(stringResource(R.string.settings_speed_unit_title)) },
+        summary = { Text(summary) },
+        onClick = { showDialog = true }
+    )
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(stringResource(R.string.settings_speed_unit_title)) },
+            text = {
+                Column {
+                    units.forEach { (value, label) ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Checkbox(
+                                checked = selectedUnits.contains(value),
+                                onCheckedChange = { checked ->
+                                    val newSet = if (checked) {
+                                        if (value == 0) setOf(0) else (selectedUnits - 0) + value
+                                    } else {
+                                        selectedUnits - value
+                                    }
+                                    onValueChange(newSet.sorted().joinToString(","))
+                                }
+                            )
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -577,12 +642,12 @@ fun AboutSection() {
     PreferenceCategory(title = { Text(stringResource(R.string.settings_category_about)) })
     Preference(
         title = { Text(stringResource(R.string.settings_app_version)) },
-        summary = { Text(BuildConfig.VERSION_NAME) }
+        summary = { Text("1.0") }
     )
     Preference(
         title = { Text(stringResource(R.string.settings_github)) },
-        summary = { Text("https://github.com/Mystery00/PixelMeter") },
-        onClick = { uriHandler.openUri("https://github.com/Mystery00/PixelMeter") }
+        summary = { Text("https://github.com/realMoai/NowbarMeter") },
+        onClick = { uriHandler.openUri("https://github.com/realMoai/NowbarMeter") }
     )
 }
 

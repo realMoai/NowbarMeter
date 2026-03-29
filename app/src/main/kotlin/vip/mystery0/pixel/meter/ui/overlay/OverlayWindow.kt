@@ -98,7 +98,8 @@ class OverlayWindow(
             composeView.setViewTreeSavedStateRegistryOwner(this@OverlayWindow)
 
             composeView.setContent {
-                PixelPulseTheme {
+                val isOledTheme by repository.isOledThemeEnabled.collectAsState(initial = false)
+                PixelPulseTheme(isOledTheme = isOledTheme) {
                     val isLocked by repository.isOverlayLocked.collectAsState()
                     val bgColor by repository.overlayBgColor.collectAsState()
                     val textColor by repository.overlayTextColor.collectAsState()
@@ -176,7 +177,7 @@ fun OverlayContent(
     textUp: String,
     textDown: String,
     upFirst: Boolean,
-    speedUnit: Int = 0,
+    speedUnit: String = "0",
     onDrag: (Float, Float) -> Unit,
     onDragEnd: () -> Unit
 ) {

@@ -55,7 +55,8 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
         val KEY_NOTIFICATION_USE_CUSTOM_COLOR =
             booleanPreferencesKey("key_notification_use_custom_color")
         val KEY_NOTIFICATION_COLOR = intPreferencesKey("key_notification_color")
-        val KEY_SPEED_UNIT = intPreferencesKey("key_speed_unit")
+        val KEY_SPEED_UNIT = stringPreferencesKey("key_speed_unit")
+        val KEY_OLED_THEME = booleanPreferencesKey("key_oled_theme")
     }
 
     val isLiveUpdateEnabled: Flow<Boolean> = dataStore.data
@@ -353,14 +354,25 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    val speedUnit: Flow<Int> = dataStore.data
+    val speedUnit: Flow<String> = dataStore.data
         .map { preferences ->
-            preferences[KEY_SPEED_UNIT] ?: 0
+            preferences[KEY_SPEED_UNIT] ?: "0"
         }
 
-    suspend fun setSpeedUnit(unit: Int) {
+    suspend fun setSpeedUnit(unit: String) {
         dataStore.edit { preferences ->
             preferences[KEY_SPEED_UNIT] = unit
+        }
+    }
+
+    val isOledThemeEnabled: Flow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_OLED_THEME] ?: false
+        }
+
+    suspend fun setOledThemeEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[KEY_OLED_THEME] = enabled
         }
     }
 }

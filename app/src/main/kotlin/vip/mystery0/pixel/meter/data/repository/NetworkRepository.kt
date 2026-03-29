@@ -103,8 +103,11 @@ class NetworkRepository(
     private val _isAutoStartServiceEnabled = MutableStateFlow(false)
     val isAutoStartServiceEnabled: StateFlow<Boolean> = _isAutoStartServiceEnabled.asStateFlow()
 
-    private val _speedUnit = MutableStateFlow(0)
-    val speedUnit: StateFlow<Int> = _speedUnit.asStateFlow()
+    private val _speedUnit = MutableStateFlow("0")
+    val speedUnit: StateFlow<String> = _speedUnit.asStateFlow()
+
+    private val _isOledThemeEnabled = MutableStateFlow(false)
+    val isOledThemeEnabled: StateFlow<Boolean> = _isOledThemeEnabled.asStateFlow()
 
     private var monitoringJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Default)
@@ -158,7 +161,8 @@ class NetworkRepository(
                 _notificationUseCustomColor.value =
                     prefs[DataStoreRepository.KEY_NOTIFICATION_USE_CUSTOM_COLOR] ?: false
                 _notificationColor.value = prefs[DataStoreRepository.KEY_NOTIFICATION_COLOR] ?: 0
-                _speedUnit.value = prefs[DataStoreRepository.KEY_SPEED_UNIT] ?: 0
+                _speedUnit.value = prefs[DataStoreRepository.KEY_SPEED_UNIT] ?: "0"
+                _isOledThemeEnabled.value = prefs[DataStoreRepository.KEY_OLED_THEME] ?: false
             }
         }
         scope.launch {
@@ -263,6 +267,11 @@ class NetworkRepository(
                 _speedUnit.value = it
             }
         }
+        scope.launch {
+            dataStoreRepository.isOledThemeEnabled.collect {
+                _isOledThemeEnabled.value = it
+            }
+        }
     }
 
     fun setOverlayEnabled(enable: Boolean) {
@@ -365,8 +374,12 @@ class NetworkRepository(
         scope.launch { dataStoreRepository.setNotificationColor(color) }
     }
 
-    fun setSpeedUnit(unit: Int) {
+    fun setSpeedUnit(unit: String) {
         scope.launch { dataStoreRepository.setSpeedUnit(unit) }
+    }
+
+    fun setOledThemeEnabled(enabled: Boolean) {
+        scope.launch { dataStoreRepository.setOledThemeEnabled(enabled) }
     }
 
     suspend fun getOverlayPosition(): Pair<Int, Int> {
@@ -459,47 +472,56 @@ class NetworkRepository(
             return pattern.format(Locale.getDefault(), value)
         }
 
-        fun formatSpeedTextForLiveUpdate(bytes: Long, speedUnit: Int = 0): String {
-            when (speedUnit) {
-                1 -> return "${formatFixedValue(bytes.toDouble())}B/s"
-                2 -> return "${formatFixedValue(bytes / 1024.0)}K/s"
-                3 -> return "${formatFixedValue(bytes / 1048576.0)}M/s"
-                4 -> return "${formatFixedValue(bytes / 1073741824.0)}G/s"
-            }
-            // 自动模式（原有逻辑）
-            if (bytes < 1024) return "${bytes}B/s"
-            val kb = bytes / 1024.0
-            if (kb < 1000) return "${"%.0f".format(Locale.getDefault(), kb)}K/s"
-            val mb = kb / 1024.0
-            if (mb < 1000) {
-                return if (mb < 100) "${"%.1f".format(Locale.getDefault(), mb)}M/s"
-                else "${"%.0f".format(Locale.getDefault(), mb)}M/s"
-            }
-            val gb = mb / 1024.0
-            return "${"%.1f".format(Locale.getDefault(), gb)}G/s"
+        fun formatSpeedTextForLiveUpdate(bytes: Long, speedUnit: String = "0"): String {
+            val (value, unit) = formatSpeedText(bytes, speedUnit)
+            return "$value$unit"
         }
 
-        fun formatSpeedText(bytes: Long, speedUnit: Int = 0): Pair<String, String> {
-            when (speedUnit) {
-                1 -> return formatFixedValue(bytes.toDouble()) to "B/s"
-                2 -> return formatFixedValue(bytes / 1024.0) to "KB/s"
-                3 -> return formatFixedValue(bytes / 1048576.0) to "MB/s"
-                4 -> return formatFixedValue(bytes / 1073741824.0) to "GB/s"
+        fun formatSpeedText(bytes: Long, speedUnit: String = "0"): Pair<String, String> {
+            val selectedUnits = speedUnit.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
+            val useAuto = selectedUnits.isEmpty() || selectedUnits.contains(0)
+
+            val unitToUse = if (useAuto) {
+                when {
+                    bytes >= 1073741824.0 -> 4
+                    bytes >= 1048576.0 -> 3
+                    bytes >= 1024.0 -> 2
+                    else -> 1
+                }
+            } else {
+                // Scaling logic constrained to selected units
+                val sortedAvailable = selectedUnits.sortedDescending()
+                var best = sortedAvailable.last()
+                for (unit in sortedAvailable) {
+                    val threshold = when (unit) {
+                        4 -> 1000 * 1024 * 1024L
+                        3 -> 1000 * 1024L
+                        2 -> 1024L
+                        else -> 0L
+                    }
+                    if (bytes >= threshold) {
+                        best = unit
+                        break
+                    }
+                }
+                best
             }
-            // 自动模式（原有逻辑）
-            if (bytes < 1024) return bytes.toString() to "B/s"
-            val kb = bytes / 1024.0
-            if (kb < 1000) return "%.0f".format(Locale.getDefault(), kb) to "KB/s"
-            val mb = kb / 1024.0
-            if (mb < 1000) {
-                return if (mb < 10) "%.1f".format(Locale.getDefault(), mb) to "MB/s"
-                else "%.0f".format(Locale.getDefault(), mb) to "MB/s"
+
+            return when (unitToUse) {
+                1 -> bytes.toString() to "B/s"
+                2 -> formatFixedValue(bytes / 1024.0) to "KB/s"
+                3 -> {
+                    val mb = bytes / 1048576.0
+                    val formatted = if (mb < 10) "%.1f".format(Locale.getDefault(), mb)
+                    else "%.0f".format(Locale.getDefault(), mb)
+                    formatted to "MB/s"
+                }
+                4 -> "%.1f".format(Locale.getDefault(), bytes / 1073741824.0) to "GB/s"
+                else -> bytes.toString() to "B/s"
             }
-            val gb = mb / 1024.0
-            return "%.1f".format(Locale.getDefault(), gb) to "GB/s"
         }
 
-        fun formatSpeedLine(bytes: Long, speedUnit: Int = 0): String {
+        fun formatSpeedLine(bytes: Long, speedUnit: String = "0"): String {
             val (v, u) = formatSpeedText(bytes, speedUnit)
             return "$v$u"
         }

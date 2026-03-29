@@ -13,15 +13,6 @@ val gitVersionCode: Int = providers.exec {
         "--count"
     )
 }.standardOutput.asText.get().trim().toInt()
-val gitVersionName: String =
-    providers.exec {
-        commandLine(
-            "git",
-            "rev-parse",
-            "--short=8",
-            "HEAD"
-        )
-    }.standardOutput.asText.get().trim()
 val appVersionName: String = libs.versions.app.version.get()
 
 kotlin {
@@ -56,13 +47,11 @@ android {
         debug {
             isMinifyEnabled = false
             isShrinkResources = false
-            versionNameSuffix = ".d$gitVersionCode.$gitVersionName"
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles("proguard-rules.pro")
-            versionNameSuffix = ".r$gitVersionCode.$gitVersionName"
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

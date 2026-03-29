@@ -2,7 +2,7 @@
 agp = "8.13.2"
 kotlin = "2.3.10"
 
-app-version = "1.7"
+app-version = "1.0"
 android-compileSdk = "36"
 android-minSdk = "31"
 android-targetSdk = "36"
@@ -41,4 +41,3 @@ skydoves-colorpicker = { group = "com.github.skydoves", name = "colorpicker-comp
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-

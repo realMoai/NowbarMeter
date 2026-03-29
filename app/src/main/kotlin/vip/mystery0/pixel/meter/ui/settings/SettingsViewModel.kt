@@ -59,6 +59,7 @@ class SettingsViewModel(
     val isHideFromRecents = repository.isHideFromRecents
     val isOverlayUseDefaultColors = repository.isOverlayUseDefaultColors
     val isAutoStartServiceEnabled = repository.isAutoStartServiceEnabled
+    val isOledThemeEnabled = repository.isOledThemeEnabled
 
     init {
         refreshOverlaySettings()
@@ -128,5 +129,7 @@ class SettingsViewModel(
     fun setAutoStartServiceEnabled(enabled: Boolean) =
         repository.setAutoStartServiceEnabled(enabled)
 
-    fun setSpeedUnit(unit: Int) = repository.setSpeedUnit(unit)
+    fun setSpeedUnit(unit: String) = repository.setSpeedUnit(unit)
+
+    fun setOledThemeEnabled(enabled: Boolean) = repository.setOledThemeEnabled(enabled)
 }

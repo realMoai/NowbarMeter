@@ -62,7 +62,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
-            PixelPulseTheme {
+            val isOledTheme by viewModel.isOledThemeEnabled.collectAsState(initial = false)
+            PixelPulseTheme(isOledTheme = isOledTheme) {
                 HomeScreen()
             }
         }
@@ -331,7 +332,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun SpeedDashboardCard(speed: NetSpeedData, speedUnit: Int = 0) {
+fun SpeedDashboardCard(speed: NetSpeedData, speedUnit: String = "0") {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),

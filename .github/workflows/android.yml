@@ -65,12 +65,12 @@ jobs:
             --ks-key-alias=$KEY_ALIAS \
             --key-pass=pass:$KEY_PASSWORD
           
-          unzip -p universal.apks universal.apk > PixelMeter-$versionName-universal.apk
+          unzip -p universal.apks universal.apk > NowbarMeter-$versionName-universal.apk
           
           # Export variables
           echo "versionName=$versionName" >> $GITHUB_ENV
           echo "aabFile=$AAB_FILE" >> $GITHUB_ENV
-          echo "universalApk=PixelMeter-$versionName-universal.apk" >> $GITHUB_ENV
+          echo "universalApk=NowbarMeter-$versionName-universal.apk" >> $GITHUB_ENV
       - name: Release
         uses: softprops/action-gh-release@v2
         with:

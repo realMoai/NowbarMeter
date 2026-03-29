@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">Pixel Meter</string>
+    <string name="app_name" translatable="false">Nowbar Meter</string>
     <string name="title_configuration">Configuration</string>
     <string name="title_monitor_control">Monitor Control</string>
     <string name="label_total_speed">Total Speed</string>
@@ -30,6 +30,8 @@
     <string name="settings_speed_unit_title">Speed Unit</string>
     <string name="settings_speed_unit_desc">Lock the display unit for speed values</string>
     <string name="settings_speed_unit_auto">Auto</string>
+    <string name="settings_oled_theme_title">OLED Theme</string>
+    <string name="settings_oled_theme_desc">Enable pure black theme for OLED screens</string>
     <string name="settings_auto_start_service_title">Auto-start Monitoring Service</string>
     <string name="settings_auto_start_service_desc">Start service automatically on boot</string>
     <string name="settings_auto_start_disabled_reason">Requires Overlay or Notification permission</string>
@@ -53,8 +55,8 @@
     <string name="settings_show_up_first">Prioritize Upload Speed</string>
     <string name="settings_show_up_first_desc">Show upload speed before download speed</string>
     <string name="settings_category_notification">Notification Settings</string>
-    <string name="config_enable_live_update">Enable Live Update</string>
-    <string name="config_enable_live_update_desc">Use status bar chip (Requires Android 16+)</string>
+    <string name="config_enable_live_update">Now Bar Integration</string>
+    <string name="config_enable_live_update_desc">Use status bar chip (Requires Oneui 7+)</string>
     <string name="settings_notification_display_mode">Display Content</string>
     <string name="settings_display_mode_total">Total Speed</string>
     <string name="settings_display_mode_upload">Upload Only</string>
@@ -93,7 +95,7 @@
     <string name="error_service_start_failed">Failed to start service: %1$s</string>
 
     <string name="notification_channel_name">Network Monitor Service</string>
-    <string name="notification_content_title">Network Speed Monitor</string>
+    <string name="notification_content_title">Network Speed</string>
     <string name="notification_content_text">Monitoring in background…</string>
     <string name="notification_content_text_monitoring">Monitoring…</string>
 
