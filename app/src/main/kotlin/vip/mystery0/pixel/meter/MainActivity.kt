@@ -13,6 +13,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,6 +46,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -87,6 +89,8 @@ class MainActivity : ComponentActivity() {
         val isHideFromRecents by viewModel.isHideFromRecents.collectAsState(initial = false)
         val serviceError by viewModel.serviceStartError.collectAsState()
         val speedUnit by viewModel.speedUnit.collectAsState()
+        val compactMode by viewModel.isCompactSpeedTextEnabled.collectAsState(initial = false)
+        val isOledTheme by viewModel.isOledThemeEnabled.collectAsState(initial = false)
 
         LaunchedEffect(isHideFromRecents) {
             val activityManager =
@@ -134,7 +138,7 @@ class MainActivity : ComponentActivity() {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    SpeedDashboardCard(speed, speedUnit)
+                    SpeedDashboardCard(speed, speedUnit, compactMode)
                 }
 
                 // Service Permission Error Card
@@ -296,7 +300,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { launchSpeedTest(context) },
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            containerColor = if (isOledTheme && isSystemInDarkTheme()) Color.Black else MaterialTheme.colorScheme.surfaceVariant
                         )
                     ) {
                         Row(
@@ -308,19 +312,19 @@ class MainActivity : ComponentActivity() {
                             Icon(
                                 Icons.Default.NetworkCheck,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = if (isOledTheme && isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(Modifier.width(16.dp))
                             Column {
                                 Text(
                                     text = stringResource(R.string.action_speed_test),
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = if (isOledTheme && isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
                                     text = stringResource(R.string.desc_speed_test),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = if (isOledTheme && isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -332,7 +336,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun SpeedDashboardCard(speed: NetSpeedData, speedUnit: String = "0") {
+fun SpeedDashboardCard(speed: NetSpeedData, speedUnit: String = "0", compactMode: Boolean = false) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -347,7 +351,7 @@ fun SpeedDashboardCard(speed: NetSpeedData, speedUnit: String = "0") {
                 style = MaterialTheme.typography.labelMedium
             )
             Text(
-                NetworkRepository.formatSpeedLine(speed.totalSpeed, speedUnit),
+                NetworkRepository.formatSpeedLine(speed.totalSpeed, speedUnit, compactMode),
                 style = MaterialTheme.typography.displayMedium,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -362,7 +366,7 @@ fun SpeedDashboardCard(speed: NetSpeedData, speedUnit: String = "0") {
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        "▼ " + NetworkRepository.formatSpeedLine(speed.downloadSpeed, speedUnit),
+                        "▼ " + NetworkRepository.formatSpeedLine(speed.downloadSpeed, speedUnit, compactMode),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -372,7 +376,7 @@ fun SpeedDashboardCard(speed: NetSpeedData, speedUnit: String = "0") {
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        "▲ " + NetworkRepository.formatSpeedLine(speed.uploadSpeed, speedUnit),
+                        "▲ " + NetworkRepository.formatSpeedLine(speed.uploadSpeed, speedUnit, compactMode),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }

@@ -5,14 +5,6 @@ plugins {
 }
 
 val packageName = "com.kakao.taxi"
-val gitVersionCode: Int = providers.exec {
-    commandLine(
-        "git",
-        "rev-list",
-        "HEAD",
-        "--count"
-    )
-}.standardOutput.asText.get().trim().toInt()
 val appVersionName: String = libs.versions.app.version.get()
 
 kotlin {
@@ -32,7 +24,7 @@ android {
         applicationId = packageName
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = gitVersionCode
+        versionCode = 2
         versionName = appVersionName
     }
     packaging {

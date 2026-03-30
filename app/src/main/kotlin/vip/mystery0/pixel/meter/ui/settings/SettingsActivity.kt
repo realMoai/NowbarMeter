@@ -441,10 +441,12 @@ fun NotificationSection(viewModel: SettingsViewModel) {
     val isLiveUpdateEnabled by viewModel.isLiveUpdateEnabled.collectAsState(initial = false)
     val textUp by viewModel.notificationTextUp.collectAsState(initial = "▲ ")
     val textDown by viewModel.notificationTextDown.collectAsState(initial = "▼ ")
-    val upFirst by viewModel.notificationOrderUpFirst.collectAsState(initial = true)
+    val upFirst by viewModel.notificationOrderUpFirst.collectAsState(initial = false)
     val displayMode by viewModel.notificationDisplayMode.collectAsState(initial = 0)
-    val textSize by viewModel.notificationTextSize.collectAsState(initial = 0.65f)
-    val unitSize by viewModel.notificationUnitSize.collectAsState(initial = 0.35f)
+    val textSize by viewModel.notificationTextSize.collectAsState(initial = 0.60f)
+    val unitSize by viewModel.notificationUnitSize.collectAsState(initial = 0.45f)
+    val isCompactSpeedTextEnabled by viewModel.isCompactSpeedTextEnabled.collectAsState(initial = true)
+    val isBlankNotificationEnabled by viewModel.isBlankNotificationEnabled.collectAsState(initial = false)
 
     PreferenceCategory(title = { Text(stringResource(R.string.settings_category_notification)) })
     SwitchPreference(
@@ -458,8 +460,22 @@ fun NotificationSection(viewModel: SettingsViewModel) {
         SwitchPreference(
             value = isLiveUpdateEnabled,
             onValueChange = { viewModel.setLiveUpdateEnabled(it) },
+            enabled = !isBlankNotificationEnabled,
             title = { Text(stringResource(R.string.config_enable_live_update)) },
             summary = { Text(stringResource(R.string.config_enable_live_update_desc)) }
+        )
+        SwitchPreference(
+            value = isCompactSpeedTextEnabled,
+            onValueChange = { viewModel.setCompactSpeedTextEnabled(it) },
+            title = { Text(stringResource(R.string.settings_compact_speed_text_title)) },
+            summary = { Text(stringResource(R.string.settings_compact_speed_text_desc)) }
+        )
+        SwitchPreference(
+            value = isBlankNotificationEnabled,
+            onValueChange = { viewModel.setBlankNotificationEnabled(it) },
+            enabled = !isLiveUpdateEnabled,
+            title = { Text(stringResource(R.string.settings_blank_notification_title)) },
+            summary = { Text(stringResource(R.string.settings_blank_notification_desc)) }
         )
         TextFieldPreference(
             value = textUp,
@@ -642,7 +658,7 @@ fun AboutSection() {
     PreferenceCategory(title = { Text(stringResource(R.string.settings_category_about)) })
     Preference(
         title = { Text(stringResource(R.string.settings_app_version)) },
-        summary = { Text("1.0") }
+        summary = { Text(BuildConfig.VERSION_NAME) }
     )
     Preference(
         title = { Text(stringResource(R.string.settings_github)) },

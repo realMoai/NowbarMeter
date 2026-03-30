@@ -32,6 +32,8 @@ class MainViewModel(
 
     val speedUnit = repository.speedUnit
     val isOledThemeEnabled = repository.isOledThemeEnabled
+    val isCompactSpeedTextEnabled = repository.isCompactSpeedTextEnabled
+    val isBlankNotificationEnabled = repository.isBlankNotificationEnabled
 
     val isServiceRunning = repository.isMonitoring
 

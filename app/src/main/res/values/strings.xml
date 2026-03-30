@@ -56,7 +56,11 @@
     <string name="settings_show_up_first_desc">Show upload speed before download speed</string>
     <string name="settings_category_notification">Notification Settings</string>
     <string name="config_enable_live_update">Now Bar Integration</string>
-    <string name="config_enable_live_update_desc">Use status bar chip (Requires Oneui 7+)</string>
+    <string name="config_enable_live_update_desc">Use status bar chip (Requires OneUI 7+)</string>
+    <string name="settings_compact_speed_text_title">Compact Speed Text</string>
+    <string name="settings_compact_speed_text_desc">Hide decimals for speed >= 10 to ensure text fits in the icon</string>
+    <string name="settings_blank_notification_title">Blank Notification</string>
+    <string name="settings_blank_notification_desc">Hide notification content for a cleaner shade</string>
     <string name="settings_notification_display_mode">Display Content</string>
     <string name="settings_display_mode_total">Total Speed</string>
     <string name="settings_display_mode_upload">Upload Only</string>

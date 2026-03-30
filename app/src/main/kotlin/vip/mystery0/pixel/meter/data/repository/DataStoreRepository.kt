@@ -57,11 +57,13 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
         val KEY_NOTIFICATION_COLOR = intPreferencesKey("key_notification_color")
         val KEY_SPEED_UNIT = stringPreferencesKey("key_speed_unit")
         val KEY_OLED_THEME = booleanPreferencesKey("key_oled_theme")
+        val KEY_COMPACT_SPEED_TEXT = booleanPreferencesKey("key_compact_speed_text")
+        val KEY_BLANK_NOTIFICATION = booleanPreferencesKey("key_blank_notification")
     }
 
     val isLiveUpdateEnabled: Flow<Boolean> = dataStore.data
         .map { preferences ->
-            preferences[KEY_LIVE_UPDATE] ?: false
+            preferences[KEY_LIVE_UPDATE] ?: true
         }
 
     val isNotificationEnabled: Flow<Boolean> = dataStore.data
@@ -129,7 +131,7 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
 
     val overlayOrderUpFirst: Flow<Boolean> = dataStore.data
         .map { preferences ->
-            preferences[KEY_OVERLAY_ORDER_UP_FIRST] ?: true // Default TRUE as requested
+            preferences[KEY_OVERLAY_ORDER_UP_FIRST] ?: false // Default FALSE (Download first)
         }
 
     val notificationTextUp: Flow<String> = dataStore.data
@@ -144,7 +146,7 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
 
     val notificationOrderUpFirst: Flow<Boolean> = dataStore.data
         .map { preferences ->
-            preferences[KEY_NOTIFICATION_ORDER_UP_FIRST] ?: true // Default TRUE as requested
+            preferences[KEY_NOTIFICATION_ORDER_UP_FIRST] ?: false // Default FALSE (Download first)
         }
 
     val notificationDisplayMode: Flow<Int> = dataStore.data
@@ -154,12 +156,12 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
 
     val notificationTextSize: Flow<Float> = dataStore.data
         .map { preferences ->
-            preferences[KEY_NOTIFICATION_TEXT_SIZE] ?: 0.65f
+            preferences[KEY_NOTIFICATION_TEXT_SIZE] ?: 0.60f
         }
 
     val notificationUnitSize: Flow<Float> = dataStore.data
         .map { preferences ->
-            preferences[KEY_NOTIFICATION_UNIT_SIZE] ?: 0.35f
+            preferences[KEY_NOTIFICATION_UNIT_SIZE] ?: 0.45f
         }
 
     val notificationThreshold: Flow<Long> = dataStore.data
@@ -179,12 +181,15 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
 
     val notificationColor: Flow<Int> = dataStore.data
         .map { preferences ->
-            preferences[KEY_NOTIFICATION_COLOR] ?: 0
+            preferences[KEY_NOTIFICATION_COLOR] ?: 0xFF888888.toInt() // Default Gray
         }
 
     suspend fun setLiveUpdateEnabled(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[KEY_LIVE_UPDATE] = enabled
+            if (enabled) {
+                preferences[KEY_BLANK_NOTIFICATION] = false
+            }
         }
     }
 
@@ -373,6 +378,31 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun setOledThemeEnabled(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[KEY_OLED_THEME] = enabled
+        }
+    }
+
+    val isCompactSpeedTextEnabled: Flow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_COMPACT_SPEED_TEXT] ?: true
+        }
+
+    suspend fun setCompactSpeedTextEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[KEY_COMPACT_SPEED_TEXT] = enabled
+        }
+    }
+
+    val isBlankNotificationEnabled: Flow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_BLANK_NOTIFICATION] ?: false
+        }
+
+    suspend fun setBlankNotificationEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[KEY_BLANK_NOTIFICATION] = enabled
+            if (enabled) {
+                preferences[KEY_LIVE_UPDATE] = false
+            }
         }
     }
 }

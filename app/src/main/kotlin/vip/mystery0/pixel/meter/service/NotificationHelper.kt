@@ -11,6 +11,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.IconCompat
@@ -64,7 +65,7 @@ class NotificationHelper(private val context: Context) {
         textAlign = Paint.Align.CENTER
         isAntiAlias = true
         typeface = Typeface.DEFAULT_BOLD
-        textSize = size * 0.65f // Value text
+        textSize = size * 0.60f // Value text (Updated default)
     }
 
     private val unitPaint = Paint().apply {
@@ -72,7 +73,7 @@ class NotificationHelper(private val context: Context) {
         textAlign = Paint.Align.CENTER
         isAntiAlias = true
         typeface = Typeface.DEFAULT_BOLD
-        textSize = size * 0.35f // Unit text
+        textSize = size * 0.45f // Unit text (Updated default)
     }
 
     fun buildNotification(
@@ -83,13 +84,15 @@ class NotificationHelper(private val context: Context) {
         textDown: String,
         upFirst: Boolean,
         displayMode: Int,
-        textSize: Float = 0.65f,
-        unitSize: Float = 0.35f,
+        textSize: Float = 0.60f,
+        unitSize: Float = 0.45f,
         threshold: Long = 0L,
         lowTrafficMode: Int = 0, // 0: Static, 1: Dynamic
         useCustomColor: Boolean = false,
         color: Int = 0,
-        speedUnit: String = "0"
+        speedUnit: String = "0",
+        compactMode: Boolean = false,
+        isBlank: Boolean = false
     ): Notification {
         var shouldLiveUpdate = isLiveUpdate
         val intent = Intent().apply {
@@ -109,30 +112,38 @@ class NotificationHelper(private val context: Context) {
             .setOnlyAlertOnce(true)
             .setContentIntent(pendingIntent)
             .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+            .setSmallIcon(R.drawable.ic_speed)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
 
         if (useCustomColor) {
             builder.setColor(color)
         }
 
+        if (isBlank) {
+            val blankView = RemoteViews(context.packageName, R.layout.notification_blank)
+            builder.setCustomContentView(blankView)
+                .setCustomBigContentView(blankView)
+                .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+        } else {
+            builder.setContentTitle(context.getString(R.string.notification_content_title))
+        }
+
         if (!isNotificationEnabled) {
             // Notification Disabled (Static Mode)
-            return builder
-                .setContentTitle(context.getString(R.string.notification_content_title))
-                .setContentText(context.getString(R.string.notification_content_text))
-                .setSmallIcon(R.drawable.ic_speed)
-                .build()
+            if (!isBlank) {
+                builder.setContentText(context.getString(R.string.notification_content_text))
+            }
+            return builder.build()
         }
 
         // Logic for Threshold Check
         // If speed is below threshold AND user selected Static Mode (0), show static icon
         if (speed.totalSpeed < threshold) {
             if (lowTrafficMode == 0) {
-                return builder
-                    .setContentTitle(context.getString(R.string.notification_content_title))
-                    .setContentText(context.getString(R.string.notification_content_text_monitoring))
-                    .setSmallIcon(R.drawable.ic_speed)
-                    .build()
+                if (!isBlank) {
+                    builder.setContentText(context.getString(R.string.notification_content_text_monitoring))
+                }
+                return builder.build()
             } else {
                 shouldLiveUpdate = false
             }
@@ -142,26 +153,25 @@ class NotificationHelper(private val context: Context) {
         if (shouldLiveUpdate) {
             // Live Update Mode
             val statusText =
-                NetworkRepository.formatSpeedTextForLiveUpdate(speed.totalSpeed, speedUnit)
-            val upText = "$textUp${NetworkRepository.formatSpeedLine(speed.uploadSpeed, speedUnit)}"
+                NetworkRepository.formatSpeedTextForLiveUpdate(speed.totalSpeed, speedUnit, compactMode)
+            val upText = "$textUp${NetworkRepository.formatSpeedLine(speed.uploadSpeed, speedUnit, compactMode)}"
             val downText =
-                "$textDown${NetworkRepository.formatSpeedLine(speed.downloadSpeed, speedUnit)}"
+                "$textDown${NetworkRepository.formatSpeedLine(speed.downloadSpeed, speedUnit, compactMode)}"
 
             val contentText = when (displayMode) {
                 1 -> upText // Up Only
                 2 -> downText // Down Only
-                else -> if (upFirst) "$upText  $downText" else "$downText  $upText" // Total (Both)
+                else -> if (upFirst) "$upText  $downText" else "$downText  $upText"
             }
 
-            builder
-                .setContentTitle(context.getString(R.string.notification_content_title))
-                .setContentText(contentText)
-                .setSmallIcon(R.drawable.ic_speed)
-                .setShortCriticalText(statusText)
+            if (!isBlank) {
+                builder.setContentText(contentText)
+            }
+            builder.setShortCriticalText(statusText)
                 .setRequestPromotedOngoing(true)
         } else {
             // Standard Mode
-            val (valueStr, unitStr) = NetworkRepository.formatSpeedText(speed.totalSpeed, speedUnit)
+            val (valueStr, unitStr) = NetworkRepository.formatSpeedText(speed.totalSpeed, speedUnit, compactMode)
 
             // Draw Bitmap with speed
             bitmap.eraseColor(Color.TRANSPARENT)
@@ -178,20 +188,20 @@ class NotificationHelper(private val context: Context) {
 
             val smallIcon = IconCompat.createWithBitmap(bitmap)
 
-            val upText = "$textUp${NetworkRepository.formatSpeedLine(speed.uploadSpeed, speedUnit)}"
+            val upText = "$textUp${NetworkRepository.formatSpeedLine(speed.uploadSpeed, speedUnit, compactMode)}"
             val downText =
-                "$textDown${NetworkRepository.formatSpeedLine(speed.downloadSpeed, speedUnit)}"
+                "$textDown${NetworkRepository.formatSpeedLine(speed.downloadSpeed, speedUnit, compactMode)}"
 
             val contentText = when (displayMode) {
                 1 -> upText // Up Only
                 2 -> downText // Down Only
-                else -> if (upFirst) "$upText  $downText" else "$downText  $upText" // Total (Both)
+                else -> if (upFirst) "$upText  $downText" else "$downText  $upText"
             }
 
-            builder
-                .setContentTitle(context.getString(R.string.notification_content_title))
-                .setContentText(contentText)
-                .setSmallIcon(smallIcon)
+            if (!isBlank) {
+                builder.setContentText(contentText)
+            }
+            builder.setSmallIcon(smallIcon)
         }
 
         return builder.build()

@@ -17,6 +17,7 @@ import org.koin.core.component.KoinComponent
 import com.kakao.taxi.data.source.NetSpeedData
 import com.kakao.taxi.data.source.impl.SpeedDataSource
 import java.util.Locale
+import kotlin.math.roundToLong
 
 class NetworkRepository(
     private val dataSource: SpeedDataSource,
@@ -25,7 +26,7 @@ class NetworkRepository(
     private val _isOverlayEnabled = MutableStateFlow(false)
     val isOverlayEnabled: StateFlow<Boolean> = _isOverlayEnabled.asStateFlow()
 
-    private val _isLiveUpdateEnabled = MutableStateFlow(false)
+    private val _isLiveUpdateEnabled = MutableStateFlow(true)
     val isLiveUpdateEnabled: StateFlow<Boolean> = _isLiveUpdateEnabled.asStateFlow()
 
     private val _isNotificationEnabled = MutableStateFlow(true)
@@ -76,10 +77,10 @@ class NetworkRepository(
     private val _notificationDisplayMode = MutableStateFlow(0)
     val notificationDisplayMode: StateFlow<Int> = _notificationDisplayMode.asStateFlow()
 
-    private val _notificationTextSize = MutableStateFlow(0.65f)
+    private val _notificationTextSize = MutableStateFlow(0.60f)
     val notificationTextSize: StateFlow<Float> = _notificationTextSize.asStateFlow()
 
-    private val _notificationUnitSize = MutableStateFlow(0.35f)
+    private val _notificationUnitSize = MutableStateFlow(0.45f)
     val notificationUnitSize: StateFlow<Float> = _notificationUnitSize.asStateFlow()
 
     private val _notificationThreshold = MutableStateFlow(0L)
@@ -91,7 +92,7 @@ class NetworkRepository(
     private val _notificationUseCustomColor = MutableStateFlow(false)
     val notificationUseCustomColor: StateFlow<Boolean> = _notificationUseCustomColor.asStateFlow()
 
-    private val _notificationColor = MutableStateFlow(0)
+    private val _notificationColor = MutableStateFlow(0xFF888888.toInt())
     val notificationColor: StateFlow<Int> = _notificationColor.asStateFlow()
 
     private val _isHideFromRecents = MutableStateFlow(false)
@@ -109,6 +110,12 @@ class NetworkRepository(
     private val _isOledThemeEnabled = MutableStateFlow(false)
     val isOledThemeEnabled: StateFlow<Boolean> = _isOledThemeEnabled.asStateFlow()
 
+    private val _isCompactSpeedTextEnabled = MutableStateFlow(true)
+    val isCompactSpeedTextEnabled: StateFlow<Boolean> = _isCompactSpeedTextEnabled.asStateFlow()
+
+    private val _isBlankNotificationEnabled = MutableStateFlow(false)
+    val isBlankNotificationEnabled: StateFlow<Boolean> = _isBlankNotificationEnabled.asStateFlow()
+
     private var monitoringJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Default)
 
@@ -120,7 +127,7 @@ class NetworkRepository(
         // 单次文件 IO 批量读取所有偏好设置，避免多次 first() 重复触发 DataStore 读取
         runBlocking {
             dataStoreRepository.allPreferences.first().let { prefs ->
-                _isLiveUpdateEnabled.value = prefs[DataStoreRepository.KEY_LIVE_UPDATE] ?: false
+                _isLiveUpdateEnabled.value = prefs[DataStoreRepository.KEY_LIVE_UPDATE] ?: true
                 _isNotificationEnabled.value =
                     prefs[DataStoreRepository.KEY_NOTIFICATION_ENABLED] ?: true
                 _isOverlayLocked.value = prefs[DataStoreRepository.KEY_OVERLAY_LOCKED] ?: false
@@ -146,9 +153,9 @@ class NetworkRepository(
                 _notificationDisplayMode.value =
                     prefs[DataStoreRepository.KEY_NOTIFICATION_DISPLAY_MODE] ?: 0
                 _notificationTextSize.value =
-                    prefs[DataStoreRepository.KEY_NOTIFICATION_TEXT_SIZE] ?: 0.65f
+                    prefs[DataStoreRepository.KEY_NOTIFICATION_TEXT_SIZE] ?: 0.60f
                 _notificationUnitSize.value =
-                    prefs[DataStoreRepository.KEY_NOTIFICATION_UNIT_SIZE] ?: 0.35f
+                    prefs[DataStoreRepository.KEY_NOTIFICATION_UNIT_SIZE] ?: 0.45f
                 _isHideFromRecents.value = prefs[DataStoreRepository.KEY_HIDE_FROM_RECENTS] ?: false
                 _isOverlayUseDefaultColors.value =
                     prefs[DataStoreRepository.KEY_OVERLAY_USE_DEFAULT_COLORS] ?: false
@@ -160,9 +167,13 @@ class NetworkRepository(
                     prefs[DataStoreRepository.KEY_NOTIFICATION_LOW_TRAFFIC_MODE] ?: 0
                 _notificationUseCustomColor.value =
                     prefs[DataStoreRepository.KEY_NOTIFICATION_USE_CUSTOM_COLOR] ?: false
-                _notificationColor.value = prefs[DataStoreRepository.KEY_NOTIFICATION_COLOR] ?: 0
+                _notificationColor.value = prefs[DataStoreRepository.KEY_NOTIFICATION_COLOR] ?: 0xFF888888.toInt()
                 _speedUnit.value = prefs[DataStoreRepository.KEY_SPEED_UNIT] ?: "0"
                 _isOledThemeEnabled.value = prefs[DataStoreRepository.KEY_OLED_THEME] ?: false
+                _isCompactSpeedTextEnabled.value =
+                    prefs[DataStoreRepository.KEY_COMPACT_SPEED_TEXT] ?: true
+                _isBlankNotificationEnabled.value =
+                    prefs[DataStoreRepository.KEY_BLANK_NOTIFICATION] ?: false
             }
         }
         scope.launch {
@@ -270,6 +281,16 @@ class NetworkRepository(
         scope.launch {
             dataStoreRepository.isOledThemeEnabled.collect {
                 _isOledThemeEnabled.value = it
+            }
+        }
+        scope.launch {
+            dataStoreRepository.isCompactSpeedTextEnabled.collect {
+                _isCompactSpeedTextEnabled.value = it
+            }
+        }
+        scope.launch {
+            dataStoreRepository.isBlankNotificationEnabled.collect {
+                _isBlankNotificationEnabled.value = it
             }
         }
     }
@@ -382,6 +403,14 @@ class NetworkRepository(
         scope.launch { dataStoreRepository.setOledThemeEnabled(enabled) }
     }
 
+    fun setCompactSpeedTextEnabled(enabled: Boolean) {
+        scope.launch { dataStoreRepository.setCompactSpeedTextEnabled(enabled) }
+    }
+
+    fun setBlankNotificationEnabled(enabled: Boolean) {
+        scope.launch { dataStoreRepository.setBlankNotificationEnabled(enabled) }
+    }
+
     suspend fun getOverlayPosition(): Pair<Int, Int> {
         val x = dataStoreRepository.overlayX.first()
         val y = dataStoreRepository.overlayY.first()
@@ -463,7 +492,13 @@ class NetworkRepository(
         /**
          * 根据数值大小格式化小数位数：>= 100 → 0 位，>= 10 → 1 位，否则 2 位
          */
-        private fun formatFixedValue(value: Double): String {
+        private fun formatFixedValue(value: Double, compact: Boolean = false): String {
+            if (compact) {
+                return when {
+                    value >= 10.0 -> value.roundToLong().toString()
+                    else -> "%.1f".format(Locale.getDefault(), value)
+                }
+            }
             val pattern = when {
                 value >= 100 -> "%.0f"
                 value >= 10 -> "%.1f"
@@ -472,12 +507,20 @@ class NetworkRepository(
             return pattern.format(Locale.getDefault(), value)
         }
 
-        fun formatSpeedTextForLiveUpdate(bytes: Long, speedUnit: String = "0"): String {
-            val (value, unit) = formatSpeedText(bytes, speedUnit)
+        fun formatSpeedTextForLiveUpdate(
+            bytes: Long,
+            speedUnit: String = "0",
+            compact: Boolean = false
+        ): String {
+            val (value, unit) = formatSpeedText(bytes, speedUnit, compact)
             return "$value$unit"
         }
 
-        fun formatSpeedText(bytes: Long, speedUnit: String = "0"): Pair<String, String> {
+        fun formatSpeedText(
+            bytes: Long,
+            speedUnit: String = "0",
+            compact: Boolean = false
+        ): Pair<String, String> {
             val selectedUnits = speedUnit.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
             val useAuto = selectedUnits.isEmpty() || selectedUnits.contains(0)
 
@@ -509,20 +552,38 @@ class NetworkRepository(
 
             return when (unitToUse) {
                 1 -> bytes.toString() to "B/s"
-                2 -> formatFixedValue(bytes / 1024.0) to "KB/s"
+                2 -> formatFixedValue(bytes / 1024.0, compact) to "KB/s"
                 3 -> {
                     val mb = bytes / 1048576.0
-                    val formatted = if (mb < 10) "%.1f".format(Locale.getDefault(), mb)
-                    else "%.0f".format(Locale.getDefault(), mb)
+                    val formatted = if (compact) {
+                        if (mb >= 10.0) mb.roundToLong().toString()
+                        else "%.1f".format(Locale.getDefault(), mb)
+                    } else {
+                        if (mb < 10) "%.1f".format(Locale.getDefault(), mb)
+                        else "%.0f".format(Locale.getDefault(), mb)
+                    }
                     formatted to "MB/s"
                 }
-                4 -> "%.1f".format(Locale.getDefault(), bytes / 1073741824.0) to "GB/s"
+                4 -> {
+                    val gb = bytes / 1073741824.0
+                    val formatted = if (compact) {
+                        if (gb >= 10.0) gb.roundToLong().toString()
+                        else "%.1f".format(Locale.getDefault(), gb)
+                    } else {
+                        "%.1f".format(Locale.getDefault(), gb)
+                    }
+                    formatted to "GB/s"
+                }
                 else -> bytes.toString() to "B/s"
             }
         }
 
-        fun formatSpeedLine(bytes: Long, speedUnit: String = "0"): String {
-            val (v, u) = formatSpeedText(bytes, speedUnit)
+        fun formatSpeedLine(
+            bytes: Long,
+            speedUnit: String = "0",
+            compact: Boolean = false
+        ): String {
+            val (v, u) = formatSpeedText(bytes, speedUnit, compact)
             return "$v$u"
         }
     }

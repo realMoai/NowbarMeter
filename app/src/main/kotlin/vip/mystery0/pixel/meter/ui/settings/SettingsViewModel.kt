@@ -52,6 +52,8 @@ class SettingsViewModel(
     val notificationLowTrafficMode = repository.notificationLowTrafficMode
     val notificationUseCustomColor = repository.notificationUseCustomColor
     val notificationColor = repository.notificationColor
+    val isCompactSpeedTextEnabled = repository.isCompactSpeedTextEnabled
+    val isBlankNotificationEnabled = repository.isBlankNotificationEnabled
 
     // General Settings
     val samplingInterval = repository.samplingInterval
@@ -132,4 +134,7 @@ class SettingsViewModel(
     fun setSpeedUnit(unit: String) = repository.setSpeedUnit(unit)
 
     fun setOledThemeEnabled(enabled: Boolean) = repository.setOledThemeEnabled(enabled)
+
+    fun setCompactSpeedTextEnabled(enabled: Boolean) = repository.setCompactSpeedTextEnabled(enabled)
+    fun setBlankNotificationEnabled(enabled: Boolean) = repository.setBlankNotificationEnabled(enabled)
 }
