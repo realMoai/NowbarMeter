@@ -13,6 +13,7 @@
     <img src="https://img.shields.io/badge/Version-1.2-green" alt="Version 1.2">
     <img src="https://img.shields.io/badge/Forked_From-Pixel_Meter-blue" alt="Forked from Pixel Meter">
     <img src="https://img.shields.io/github/downloads/realMoai/NowbarMeter/total" alt="Downloads">
+    <a href="https://buymeacoffee.com/nowbarmeter"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=flat&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee"></a>
 </p>
 
 ## About
@@ -66,6 +67,12 @@ Since this app modifies system-level UI elements, it is not available on the Goo
 - **Architecture Pattern**: MVVM + Clean Architecture
 - **Dependency Injection**: Koin
 - **Data Source**: `TrafficStats` + `ConnectivityManager`
+
+## Support
+
+If you find this app useful and want to help support the reverse-engineering and late nights spent fighting Samsung's UI restrictions, consider buying me a coffee! ☕
+
+<a href="https://buymeacoffee.com/nowbarmeter" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 50px !important;width: 181px !important;" ></a>
 
 ## Credits
 
