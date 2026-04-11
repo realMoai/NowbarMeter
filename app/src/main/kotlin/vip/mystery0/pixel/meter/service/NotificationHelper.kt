@@ -76,6 +76,18 @@ class NotificationHelper(private val context: Context) {
         textSize = size * 0.45f // Unit text (Updated default)
     }
 
+    private fun applySamsungHack(notification: Notification): Notification {
+        try {
+            val semFlagsField = android.app.Notification::class.java.getDeclaredField("semFlags")
+            semFlagsField.isAccessible = true
+            val currentFlags = semFlagsField.getInt(notification)
+            semFlagsField.setInt(notification, currentFlags or 32768)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return notification
+    }
+
     fun buildNotification(
         speed: NetSpeedData,
         isLiveUpdate: Boolean,
@@ -92,9 +104,11 @@ class NotificationHelper(private val context: Context) {
         color: Int = 0,
         speedUnit: String = "0",
         compactMode: Boolean = false,
-        isBlank: Boolean = false
+        isBlank: Boolean = false,
+        isTransparentIcon: Boolean = false,
+        forceLiveUpdateOnLockscreen: Boolean = false
     ): Notification {
-        var shouldLiveUpdate = isLiveUpdate
+        var shouldLiveUpdate = isLiveUpdate || forceLiveUpdateOnLockscreen
         val intent = Intent().apply {
             setClassName(context, MainActivity::class.java.name)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -111,12 +125,18 @@ class NotificationHelper(private val context: Context) {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setContentIntent(pendingIntent)
-            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setSmallIcon(R.drawable.ic_speed)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
 
-        if (useCustomColor) {
+        if (isTransparentIcon) {
+            builder.setColor(0x00000000)
+        } else if (useCustomColor) {
             builder.setColor(color)
+        } else {
+            // Reset to fully opaque if the user toggles custom colors off
+            textPaint.alpha = 255
+            unitPaint.alpha = 255
         }
 
         if (isBlank) {
@@ -138,14 +158,16 @@ class NotificationHelper(private val context: Context) {
 
         // Logic for Threshold Check
         // If speed is below threshold AND user selected Static Mode (0), show static icon
-        if (speed.totalSpeed < threshold) {
-            if (lowTrafficMode == 0) {
-                if (!isBlank) {
-                    builder.setContentText(context.getString(R.string.notification_content_text_monitoring))
+        if (!forceLiveUpdateOnLockscreen) {
+            if (speed.totalSpeed < threshold) {
+                if (lowTrafficMode == 0) {
+                    if (!isBlank) {
+                        builder.setContentText(context.getString(R.string.notification_content_text_monitoring))
+                    }
+                    return builder.build()
+                } else {
+                    shouldLiveUpdate = false
                 }
-                return builder.build()
-            } else {
-                shouldLiveUpdate = false
             }
         }
 
@@ -154,6 +176,7 @@ class NotificationHelper(private val context: Context) {
             // Live Update Mode
             val statusText =
                 NetworkRepository.formatSpeedTextForLiveUpdate(speed.totalSpeed, speedUnit, compactMode)
+            
             val upText = "$textUp${NetworkRepository.formatSpeedLine(speed.uploadSpeed, speedUnit, compactMode)}"
             val downText =
                 "$textDown${NetworkRepository.formatSpeedLine(speed.downloadSpeed, speedUnit, compactMode)}"
@@ -164,9 +187,32 @@ class NotificationHelper(private val context: Context) {
                 else -> if (upFirst) "$upText  $downText" else "$downText  $upText"
             }
 
+            val samsungExtras = android.os.Bundle().apply {
+                putInt("android.ongoingActivityNoti.style", 1)
+
+                // Status Bar Chip Text
+                putString("android.ongoingActivityNoti.primaryInfo", statusText) // Shows the current speed in the pill
+                putString("android.ongoingActivityNoti.secondaryInfo", contentText) // Shows Up/Down speeds
+
+                // Expanded Now Bar Panel Text
+                putString("android.ongoingActivityNoti.nowbarPrimaryInfo", context.getString(R.string.notification_content_title)) // "Network Speed"
+                putString("android.ongoingActivityNoti.nowbarSecondaryInfo", statusText) // Current speed
+                
+                if (isTransparentIcon) {
+                    putInt("android.ongoingActivityNoti.chipBgColor", 0x00000000)
+                } else if (useCustomColor) {
+                    putInt("android.ongoingActivityNoti.chipBgColor", color)
+                }
+            }
+
+            builder.setCategory(NotificationCompat.CATEGORY_NAVIGATION)
+            builder.addExtras(samsungExtras)
+
             if (!isBlank) {
                 builder.setContentText(contentText)
             }
+            builder.setTicker(statusText)
+            builder.setContentTitle(statusText)
             builder.setShortCriticalText(statusText)
                 .setRequestPromotedOngoing(true)
         } else {
@@ -204,6 +250,6 @@ class NotificationHelper(private val context: Context) {
             builder.setSmallIcon(smallIcon)
         }
 
-        return builder.build()
+        return if (shouldLiveUpdate) applySamsungHack(builder.build()) else builder.build()
     }
 }

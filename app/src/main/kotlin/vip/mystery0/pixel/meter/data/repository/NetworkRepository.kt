@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +17,7 @@ import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import com.kakao.taxi.data.source.NetSpeedData
 import com.kakao.taxi.data.source.impl.SpeedDataSource
+import com.kakao.taxi.data.repository.DataStoreRepository
 import java.util.Locale
 import kotlin.math.roundToLong
 
@@ -31,6 +33,9 @@ class NetworkRepository(
 
     private val _isNotificationEnabled = MutableStateFlow(true)
     val isNotificationEnabled: StateFlow<Boolean> = _isNotificationEnabled.asStateFlow()
+
+    private val _isShowOnLockscreenEnabled = MutableStateFlow(false)
+    val isShowOnLockscreenEnabled: StateFlow<Boolean> = _isShowOnLockscreenEnabled.asStateFlow()
 
     private val _isOverlayLocked = MutableStateFlow(false)
     val isOverlayLocked: StateFlow<Boolean> = _isOverlayLocked.asStateFlow()
@@ -116,6 +121,11 @@ class NetworkRepository(
     private val _isBlankNotificationEnabled = MutableStateFlow(false)
     val isBlankNotificationEnabled: StateFlow<Boolean> = _isBlankNotificationEnabled.asStateFlow()
 
+    private val _isNotificationTransparentIconEnabled = MutableStateFlow(false)
+    val isNotificationTransparentIconEnabled: StateFlow<Boolean> = _isNotificationTransparentIconEnabled.asStateFlow()
+
+    val skippedUpdateVersion: Flow<String> = dataStoreRepository.skippedUpdateVersion
+
     private var monitoringJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Default)
 
@@ -130,6 +140,7 @@ class NetworkRepository(
                 _isLiveUpdateEnabled.value = prefs[DataStoreRepository.KEY_LIVE_UPDATE] ?: true
                 _isNotificationEnabled.value =
                     prefs[DataStoreRepository.KEY_NOTIFICATION_ENABLED] ?: true
+                _isShowOnLockscreenEnabled.value = prefs[DataStoreRepository.KEY_SHOW_ON_LOCKSCREEN] ?: false
                 _isOverlayLocked.value = prefs[DataStoreRepository.KEY_OVERLAY_LOCKED] ?: false
                 _isOverlayEnabled.value = prefs[DataStoreRepository.KEY_OVERLAY_ENABLED] ?: false
                 _samplingInterval.value = prefs[DataStoreRepository.KEY_SAMPLING_INTERVAL] ?: 1500L
@@ -174,6 +185,8 @@ class NetworkRepository(
                     prefs[DataStoreRepository.KEY_COMPACT_SPEED_TEXT] ?: true
                 _isBlankNotificationEnabled.value =
                     prefs[DataStoreRepository.KEY_BLANK_NOTIFICATION] ?: false
+                _isNotificationTransparentIconEnabled.value =
+                    prefs[DataStoreRepository.KEY_NOTIFICATION_TRANSPARENT_ICON] ?: false
             }
         }
         scope.launch {
@@ -181,6 +194,9 @@ class NetworkRepository(
         }
         scope.launch {
             dataStoreRepository.isNotificationEnabled.collect { _isNotificationEnabled.value = it }
+        }
+        scope.launch {
+            dataStoreRepository.isShowOnLockscreenEnabled.collect { _isShowOnLockscreenEnabled.value = it }
         }
         scope.launch {
             dataStoreRepository.isOverlayLocked.collect { _isOverlayLocked.value = it }
@@ -293,6 +309,11 @@ class NetworkRepository(
                 _isBlankNotificationEnabled.value = it
             }
         }
+        scope.launch {
+            dataStoreRepository.isNotificationTransparentIconEnabled.collect {
+                _isNotificationTransparentIconEnabled.value = it
+            }
+        }
     }
 
     fun setOverlayEnabled(enable: Boolean) {
@@ -305,6 +326,10 @@ class NetworkRepository(
 
     fun setNotificationEnabled(enable: Boolean) {
         scope.launch { dataStoreRepository.setNotificationEnabled(enable) }
+    }
+
+    fun setShowOnLockscreenEnabled(enable: Boolean) {
+        scope.launch { dataStoreRepository.setShowOnLockscreenEnabled(enable) }
     }
 
     fun setOverlayLocked(locked: Boolean) {
@@ -411,6 +436,14 @@ class NetworkRepository(
         scope.launch { dataStoreRepository.setBlankNotificationEnabled(enabled) }
     }
 
+    fun setNotificationTransparentIconEnabled(enabled: Boolean) {
+        scope.launch { dataStoreRepository.setNotificationTransparentIconEnabled(enabled) }
+    }
+
+    suspend fun setSkippedUpdateVersion(version: String) {
+        dataStoreRepository.setSkippedUpdateVersion(version)
+    }
+
     suspend fun getOverlayPosition(): Pair<Int, Int> {
         val x = dataStoreRepository.overlayX.first()
         val y = dataStoreRepository.overlayY.first()
@@ -424,46 +457,39 @@ class NetworkRepository(
     }
 
     fun startMonitoring() {
+        if (_isMonitoring.value) return
         Log.i(TAG, "request start monitoring")
-        if (monitoringJob?.isActive == true) return
-
-        // Reset state
-        lastTotalRxBytes = 0L
-        lastTotalTxBytes = 0L
-        lastTime = 0L
-
         _isMonitoring.value = true
 
         monitoringJob = scope.launch {
-            Log.i(TAG, "startMonitoring")
+            val initialData = dataSource.getTrafficData()
+            lastTotalRxBytes = initialData.rxBytes
+            lastTotalTxBytes = initialData.txBytes
+            lastTime = System.currentTimeMillis()
 
             while (isActive) {
-                val interval = _samplingInterval.value
                 val startTime = System.currentTimeMillis()
+                val interval = _samplingInterval.value
 
-                // Get Traffic Data
-                val trafficData = dataSource.getTrafficData()
+                withContext(Dispatchers.IO) {
+                    val trafficData = dataSource.getTrafficData()
+                    val totalRxBytes = trafficData.rxBytes
+                    val totalTxBytes = trafficData.txBytes
+                    val currentTime = System.currentTimeMillis()
 
-                val currentTime = System.currentTimeMillis()
-                val totalRxBytes = trafficData.rxBytes
-                val totalTxBytes = trafficData.txBytes
+                    val rxDelta = totalRxBytes - lastTotalRxBytes
+                    val txDelta = totalTxBytes - lastTotalTxBytes
+                    val timeDelta = currentTime - lastTime
 
-                withContext(Dispatchers.Default) {
-                    if (lastTime != 0L) {
-                        val timeDelta = currentTime - lastTime
-                        val rxDelta = totalRxBytes - lastTotalRxBytes
-                        val txDelta = totalTxBytes - lastTotalTxBytes
+                    if (timeDelta > 0) {
+                        // Calculate speed
+                        val downloadSpeed = ((rxDelta * 1000) / timeDelta).coerceAtLeast(0)
+                        val uploadSpeed = ((txDelta * 1000) / timeDelta).coerceAtLeast(0)
 
-                        if (timeDelta > 0) {
-                            // Calculate speed
-                            val downloadSpeed = ((rxDelta * 1000) / timeDelta).coerceAtLeast(0)
-                            val uploadSpeed = ((txDelta * 1000) / timeDelta).coerceAtLeast(0)
-
-                            _netSpeed.value = NetSpeedData(
-                                downloadSpeed.coerceAtLeast(0),
-                                uploadSpeed.coerceAtLeast(0)
-                            )
-                        }
+                        _netSpeed.value = NetSpeedData(
+                            downloadSpeed.coerceAtLeast(0),
+                            uploadSpeed.coerceAtLeast(0)
+                        )
                     }
 
                     lastTotalRxBytes = totalRxBytes
@@ -507,15 +533,6 @@ class NetworkRepository(
             return pattern.format(Locale.getDefault(), value)
         }
 
-        fun formatSpeedTextForLiveUpdate(
-            bytes: Long,
-            speedUnit: String = "0",
-            compact: Boolean = false
-        ): String {
-            val (value, unit) = formatSpeedText(bytes, speedUnit, compact)
-            return "$value$unit"
-        }
-
         fun formatSpeedText(
             bytes: Long,
             speedUnit: String = "0",
@@ -537,8 +554,8 @@ class NetworkRepository(
                 var best = sortedAvailable.last()
                 for (unit in sortedAvailable) {
                     val threshold = when (unit) {
-                        4 -> 1000 * 1024 * 1024L
-                        3 -> 1000 * 1024L
+                        4 -> 1024 * 1024 * 1024L
+                        3 -> 1024 * 1024L
                         2 -> 1024L
                         else -> 0L
                     }
@@ -579,6 +596,15 @@ class NetworkRepository(
         }
 
         fun formatSpeedLine(
+            bytes: Long,
+            speedUnit: String = "0",
+            compact: Boolean = false
+        ): String {
+            val (v, u) = formatSpeedText(bytes, speedUnit, compact)
+            return "$v$u"
+        }
+
+        fun formatSpeedTextForLiveUpdate(
             bytes: Long,
             speedUnit: String = "0",
             compact: Boolean = false

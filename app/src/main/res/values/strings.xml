@@ -57,6 +57,8 @@
     <string name="settings_category_notification">Notification Settings</string>
     <string name="config_enable_live_update">Now Bar Integration</string>
     <string name="config_enable_live_update_desc">Use status bar chip (Requires OneUI 7+)</string>
+    <string name="settings_show_on_lockscreen_title">Show on Lockscreen</string>
+    <string name="settings_show_on_lockscreen_desc">Show on lockscreen even if Live Update is disabled</string>
     <string name="settings_compact_speed_text_title">Compact Speed Text</string>
     <string name="settings_compact_speed_text_desc">Hide decimals for speed >= 10 to ensure text fits in the icon</string>
     <string name="settings_blank_notification_title">Blank Notification</string>
@@ -75,10 +77,13 @@
     <string name="settings_notification_low_traffic_mode">Action Below Threshold</string>
     <string name="settings_notification_low_traffic_mode_static">Show Static Icon</string>
     <string name="settings_notification_low_traffic_mode_dynamic">Show Dynamic Speed</string>
-    <string name="settings_notification_low_traffic_mode_explanation">Static: Show app icon.\nDynamic: Show speed (e.g., 0K/s).\nNote: Changes may take 2 cycles to apply.</string>
+    <string name="settings_notification_low_traffic_mode_explanation">Static: Show app icon.\nDynamic: Show speed.</string>
     <string name="settings_notification_use_custom_color_title">Custom Notification Color</string>
-    <string name="settings_notification_use_custom_color_desc">Set a specific color for the notification icon (Might have miraculous effects on some ROMs)</string>
+    <string name="settings_notification_use_custom_color_desc">Set a specific color for the notification icon</string>
+    <string name="settings_notification_transparent_icon_title">Transparent Notification Icon</string>
+    <string name="settings_notification_transparent_icon_desc">Force notification icon background to be transparent</string>
     <string name="settings_notification_color_title">Notification Color</string>
+
     <string name="settings_category_background">Background Settings</string>
     <string name="settings_ignore_battery_optimizations_title">Ignore Battery Optimizations</string>
     <string name="settings_ignore_battery_optimizations_on">Optimizations Ignored</string>
@@ -107,4 +112,7 @@
     <string name="tile_notification_label">Notification</string>
     <string name="tile_desc_active">Active</string>
     <string name="tile_desc_inactive">Inactive</string>
+
+    <string name="battery_optimization_warning_title">Background Execution Restricted</string>
+    <string name="battery_optimization_warning_subtitle">Tap to disable battery optimization so the meter doesn\'t stop.</string>
 </resources>
