@@ -42,6 +42,7 @@ class SettingsViewModel(
     // Notification Settings
     val isNotificationEnabled = repository.isNotificationEnabled
     val isLiveUpdateEnabled = repository.isLiveUpdateEnabled
+    val isShowOnLockscreenEnabled = repository.isShowOnLockscreenEnabled
     val notificationTextUp = repository.notificationTextUp
     val notificationTextDown = repository.notificationTextDown
     val notificationOrderUpFirst = repository.notificationOrderUpFirst
@@ -54,6 +55,7 @@ class SettingsViewModel(
     val notificationColor = repository.notificationColor
     val isCompactSpeedTextEnabled = repository.isCompactSpeedTextEnabled
     val isBlankNotificationEnabled = repository.isBlankNotificationEnabled
+    val isNotificationTransparentIconEnabled = repository.isNotificationTransparentIconEnabled
 
     // General Settings
     val samplingInterval = repository.samplingInterval
@@ -111,6 +113,7 @@ class SettingsViewModel(
 
     fun setNotificationEnabled(enabled: Boolean) = repository.setNotificationEnabled(enabled)
     fun setLiveUpdateEnabled(enabled: Boolean) = repository.setLiveUpdateEnabled(enabled)
+    fun setShowOnLockscreenEnabled(enabled: Boolean) = repository.setShowOnLockscreenEnabled(enabled)
     fun setNotificationTextUp(text: String) = repository.setNotificationTextUp(text)
     fun setNotificationTextDown(text: String) = repository.setNotificationTextDown(text)
     fun setNotificationOrderUpFirst(upFirst: Boolean) =
@@ -137,4 +140,5 @@ class SettingsViewModel(
 
     fun setCompactSpeedTextEnabled(enabled: Boolean) = repository.setCompactSpeedTextEnabled(enabled)
     fun setBlankNotificationEnabled(enabled: Boolean) = repository.setBlankNotificationEnabled(enabled)
+    fun setNotificationTransparentIconEnabled(enabled: Boolean) = repository.setNotificationTransparentIconEnabled(enabled)
 }

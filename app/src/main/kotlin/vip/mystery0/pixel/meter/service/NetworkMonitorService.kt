@@ -1,5 +1,6 @@
 package com.kakao.taxi.service
 
+import android.app.KeyguardManager
 import android.app.NotificationManager
 import android.app.Service
 import android.content.BroadcastReceiver
@@ -31,15 +32,34 @@ class NetworkMonitorService : Service() {
     private val notificationHelper: NotificationHelper by inject()
     private val notificationManager: NotificationManager by inject()
     private val overlayWindow: OverlayWindow by inject()
+    private val keyguardManager by lazy { getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager }
 
     private var serviceJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Default)
+
+    private val screenStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            updateNotificationManually()
+        }
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
         NotificationHelper.createNotificationChannel(this)
+        
+        val screenStateFilter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_USER_PRESENT)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(screenStateReceiver, screenStateFilter, RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(screenStateReceiver, screenStateFilter)
+        }
+
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_SCREEN_OFF)
@@ -68,7 +88,9 @@ class NetworkMonitorService : Service() {
             color = 0,
             speedUnit = "0",
             compactMode = false,
-            isBlank = false
+            isBlank = false,
+            isTransparentIcon = repository.isNotificationTransparentIconEnabled.value,
+            forceLiveUpdateOnLockscreen = false
         )
 
         try {
@@ -103,55 +125,71 @@ class NetworkMonitorService : Service() {
 
         serviceJob = scope.launch {
             repository.netSpeed.collect { speed ->
-                // Overlay logic
-                withContext(Dispatchers.Main) {
-                    try {
-                        if (repository.isOverlayEnabled.value) {
-                            if (Settings.canDrawOverlays(this@NetworkMonitorService)) {
-                                overlayWindow.show()
-                                overlayWindow.update(speed)
-                            } else {
-                                Log.w(
-                                    TAG,
-                                    "overlay enabled but permission not granted, hiding overlay."
-                                )
-                                overlayWindow.hide()
-                            }
-                        } else {
-                            overlayWindow.hide()
-                        }
-                    } catch (e: Exception) {
-                        Log.w(TAG, "startMonitoring: overlay window error", e)
-                    }
-                }
-
-                // Notification logic
-                val notification = withContext(Dispatchers.Default) {
-                    val isLiveUpdate = repository.isLiveUpdateEnabled.value
-                    val isNotificationEnabled = repository.isNotificationEnabled.value
-                    val textUp = repository.notificationTextUp.value
-                    val textDown = repository.notificationTextDown.value
-                    val upFirst = repository.notificationOrderUpFirst.value
-                    val displayMode = repository.notificationDisplayMode.value
-                    val textSize = repository.notificationTextSize.value
-                    val unitSize = repository.notificationUnitSize.value
-                    val threshold = repository.notificationThreshold.value
-                    val lowTrafficMode = repository.notificationLowTrafficMode.value
-                    val useCustomColor = repository.notificationUseCustomColor.value
-                    val color = repository.notificationColor.value
-                    val speedUnit = repository.speedUnit.value
-                    val compactMode = repository.isCompactSpeedTextEnabled.value
-                    val isBlank = repository.isBlankNotificationEnabled.value
-
-                    notificationHelper.buildNotification(
-                        speed, isLiveUpdate, isNotificationEnabled,
-                        textUp, textDown, upFirst, displayMode,
-                        textSize, unitSize, threshold, lowTrafficMode,
-                        useCustomColor, color, speedUnit, compactMode, isBlank
-                    )
-                }
-                notificationManager.notify(NotificationHelper.NOTIFICATION_ID, notification)
+                updateNotification(speed)
             }
+        }
+    }
+
+    private suspend fun updateNotification(speed: NetSpeedData) {
+        // Overlay logic
+        withContext(Dispatchers.Main) {
+            try {
+                if (repository.isOverlayEnabled.value) {
+                    if (Settings.canDrawOverlays(this@NetworkMonitorService)) {
+                        overlayWindow.show()
+                        overlayWindow.update(speed)
+                    } else {
+                        Log.w(
+                            TAG,
+                            "overlay enabled but permission not granted, hiding overlay."
+                        )
+                        overlayWindow.hide()
+                    }
+                } else {
+                    overlayWindow.hide()
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "startMonitoring: overlay window error", e)
+            }
+        }
+
+        // Notification logic
+        val notification = withContext(Dispatchers.Default) {
+            val isLiveUpdate = repository.isLiveUpdateEnabled.value
+            val isNotificationEnabled = repository.isNotificationEnabled.value
+            val isShowOnLockscreenEnabled = repository.isShowOnLockscreenEnabled.value
+            val textUp = repository.notificationTextUp.value
+            val textDown = repository.notificationTextDown.value
+            val upFirst = repository.notificationOrderUpFirst.value
+            val displayMode = repository.notificationDisplayMode.value
+            val textSize = repository.notificationTextSize.value
+            val unitSize = repository.notificationUnitSize.value
+            val threshold = repository.notificationThreshold.value
+            val lowTrafficMode = repository.notificationLowTrafficMode.value
+            val useCustomColor = repository.notificationUseCustomColor.value
+            val color = repository.notificationColor.value
+            val speedUnit = repository.speedUnit.value
+            val compactMode = repository.isCompactSpeedTextEnabled.value
+            val isBlank = repository.isBlankNotificationEnabled.value
+            val isTransparentIcon = repository.isNotificationTransparentIconEnabled.value
+
+            val isLocked = keyguardManager.isKeyguardLocked
+            val forceLiveUpdate = isShowOnLockscreenEnabled && isLocked
+
+            notificationHelper.buildNotification(
+                speed, isLiveUpdate, isNotificationEnabled,
+                textUp, textDown, upFirst, displayMode,
+                textSize, unitSize, threshold, lowTrafficMode,
+                useCustomColor, color, speedUnit, compactMode, isBlank,
+                isTransparentIcon, forceLiveUpdate
+            )
+        }
+        notificationManager.notify(NotificationHelper.NOTIFICATION_ID, notification)
+    }
+
+    private fun updateNotificationManually() {
+        scope.launch {
+            updateNotification(repository.netSpeed.value)
         }
     }
 
@@ -185,6 +223,7 @@ class NetworkMonitorService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(screenReceiver)
+        unregisterReceiver(screenStateReceiver)
         serviceJob?.cancel()
         stopMonitoringJob?.cancel()
         overlayWindow.hide()

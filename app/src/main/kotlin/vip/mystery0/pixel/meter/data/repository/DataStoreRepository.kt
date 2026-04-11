@@ -25,6 +25,7 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
     companion object {
         val KEY_LIVE_UPDATE = booleanPreferencesKey("key_live_update")
         val KEY_NOTIFICATION_ENABLED = booleanPreferencesKey("key_notification_enabled")
+        val KEY_SHOW_ON_LOCKSCREEN = booleanPreferencesKey("key_show_on_lockscreen")
         val KEY_OVERLAY_ENABLED = booleanPreferencesKey("key_overlay_enabled")
         val KEY_OVERLAY_LOCKED = booleanPreferencesKey("key_overlay_locked")
         val KEY_OVERLAY_X = intPreferencesKey("key_overlay_x")
@@ -59,6 +60,8 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
         val KEY_OLED_THEME = booleanPreferencesKey("key_oled_theme")
         val KEY_COMPACT_SPEED_TEXT = booleanPreferencesKey("key_compact_speed_text")
         val KEY_BLANK_NOTIFICATION = booleanPreferencesKey("key_blank_notification")
+        val KEY_NOTIFICATION_TRANSPARENT_ICON = booleanPreferencesKey("key_notification_transparent_icon")
+        val KEY_SKIPPED_UPDATE_VERSION = stringPreferencesKey("key_skipped_update_version")
     }
 
     val isLiveUpdateEnabled: Flow<Boolean> = dataStore.data
@@ -70,6 +73,11 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
         .map { preferences ->
             preferences[KEY_NOTIFICATION_ENABLED]
                 ?: true // Default TRUE as seen in NetworkRepository
+        }
+
+    val isShowOnLockscreenEnabled: Flow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_SHOW_ON_LOCKSCREEN] ?: false
         }
 
     val isOverlayEnabled: Flow<Boolean> = dataStore.data
@@ -176,7 +184,7 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
 
     val notificationUseCustomColor: Flow<Boolean> = dataStore.data
         .map { preferences ->
-            preferences[KEY_NOTIFICATION_USE_CUSTOM_COLOR] ?: false
+            preferences[KEY_NOTIFICATION_USE_CUSTOM_COLOR] ?: true
         }
 
     val notificationColor: Flow<Int> = dataStore.data
@@ -196,6 +204,12 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun setNotificationEnabled(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[KEY_NOTIFICATION_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setShowOnLockscreenEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[KEY_SHOW_ON_LOCKSCREEN] = enabled
         }
     }
 
@@ -403,6 +417,28 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
             if (enabled) {
                 preferences[KEY_LIVE_UPDATE] = false
             }
+        }
+    }
+
+    val isNotificationTransparentIconEnabled: Flow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_NOTIFICATION_TRANSPARENT_ICON] ?: false
+        }
+
+    suspend fun setNotificationTransparentIconEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[KEY_NOTIFICATION_TRANSPARENT_ICON] = enabled
+        }
+    }
+
+    val skippedUpdateVersion: Flow<String> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_SKIPPED_UPDATE_VERSION] ?: ""
+        }
+
+    suspend fun setSkippedUpdateVersion(version: String) {
+        dataStore.edit { preferences ->
+            preferences[KEY_SKIPPED_UPDATE_VERSION] = version
         }
     }
 }

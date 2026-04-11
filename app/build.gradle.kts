@@ -5,7 +5,6 @@ plugins {
 }
 
 val packageName = "com.kakao.taxi"
-val appVersionName: String = libs.versions.app.version.get()
 
 kotlin {
     compilerOptions {
@@ -21,11 +20,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = packageName
+        applicationId = "com.kakao.taxi"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 2
-        versionName = appVersionName
+        versionName = "1.2"
     }
     packaging {
         resources {
@@ -72,6 +71,7 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

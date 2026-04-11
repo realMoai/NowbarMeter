@@ -1,8 +1,10 @@
 package com.kakao.taxi.ui.settings
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.HapticFeedbackConstants
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -49,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -139,6 +142,7 @@ class SettingsActivity : ComponentActivity() {
 
 @Composable
 fun GeneralSection(viewModel: SettingsViewModel) {
+    val view = LocalView.current
     val context = LocalContext.current
     val interval by viewModel.samplingInterval.collectAsState(initial = 1500L)
     val speedUnit by viewModel.speedUnit.collectAsState(initial = "0")
@@ -154,7 +158,10 @@ fun GeneralSection(viewModel: SettingsViewModel) {
         value = 0F,
         onValueChange = { },
         sliderValue = interval.toFloat(),
-        onSliderValueChange = { viewModel.setSamplingInterval(it.toLong()) },
+        onSliderValueChange = {
+            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            viewModel.setSamplingInterval(it.toLong())
+        },
         valueRange = 1000f..3000f,
         valueSteps = 19,
         title = { Text(stringResource(R.string.settings_sampling_interval)) },
@@ -169,7 +176,10 @@ fun GeneralSection(viewModel: SettingsViewModel) {
 
     SwitchPreference(
         value = isOledThemeEnabled,
-        onValueChange = { viewModel.setOledThemeEnabled(it) },
+        onValueChange = { isChecked ->
+            performToggleHaptic(view, isChecked)
+            viewModel.setOledThemeEnabled(isChecked)
+        },
         title = { Text(stringResource(R.string.settings_oled_theme_title)) },
         summary = { Text(stringResource(R.string.settings_oled_theme_desc)) }
     )
@@ -182,7 +192,10 @@ fun GeneralSection(viewModel: SettingsViewModel) {
 
     SwitchPreference(
         value = isAutoStartEnabled,
-        onValueChange = { viewModel.setAutoStartServiceEnabled(it) },
+        onValueChange = { isChecked ->
+            performToggleHaptic(view, isChecked)
+            viewModel.setAutoStartServiceEnabled(isChecked)
+        },
         enabled = canEnableAutoStart,
         title = { Text(stringResource(R.string.settings_auto_start_service_title)) },
         summary = { Text(autoStartSummary) }
@@ -198,6 +211,7 @@ fun GeneralSection(viewModel: SettingsViewModel) {
         title = { Text(stringResource(R.string.settings_permission_overlay)) },
         summary = { Text(overlayPermissionSummary) },
         onClick = {
+            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
             val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
             intent.data = "package:${context.packageName}".toUri()
             context.startActivity(intent)
@@ -213,6 +227,7 @@ fun GeneralSection(viewModel: SettingsViewModel) {
         title = { Text(stringResource(R.string.settings_permission_notification)) },
         summary = { Text(notificationPermissionSummary) },
         onClick = {
+            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
             val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
             intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
             context.startActivity(intent)
@@ -225,6 +240,7 @@ fun SpeedUnitPreference(
     currentValue: String,
     onValueChange: (String) -> Unit
 ) {
+    val view = LocalView.current
     val selectedUnits = remember(currentValue) {
         currentValue.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
     }
@@ -249,7 +265,10 @@ fun SpeedUnitPreference(
     Preference(
         title = { Text(stringResource(R.string.settings_speed_unit_title)) },
         summary = { Text(summary) },
-        onClick = { showDialog = true }
+        onClick = {
+            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            showDialog = true
+        }
     )
 
     if (showDialog) {
@@ -268,6 +287,7 @@ fun SpeedUnitPreference(
                             Checkbox(
                                 checked = selectedUnits.contains(value),
                                 onCheckedChange = { checked ->
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                                     val newSet = if (checked) {
                                         if (value == 0) setOf(0) else (selectedUnits - 0) + value
                                     } else {
@@ -286,7 +306,10 @@ fun SpeedUnitPreference(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showDialog = false }) {
+                TextButton(onClick = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    showDialog = false
+                }) {
                     Text(stringResource(android.R.string.ok))
                 }
             }
@@ -296,6 +319,7 @@ fun SpeedUnitPreference(
 
 @Composable
 fun BackgroundSection(viewModel: SettingsViewModel) {
+    val view = LocalView.current
     val context = LocalContext.current
     val isIgnoringBatteryOptimizations by viewModel.isIgnoringBatteryOptimizations.collectAsState()
     val isHideFromRecents by viewModel.isHideFromRecents.collectAsState(initial = false)
@@ -311,6 +335,7 @@ fun BackgroundSection(viewModel: SettingsViewModel) {
             )
         },
         onClick = {
+            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
             val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
             intent.data = "package:${context.packageName}".toUri()
             context.startActivity(intent)
@@ -319,7 +344,10 @@ fun BackgroundSection(viewModel: SettingsViewModel) {
 
     SwitchPreference(
         value = isHideFromRecents,
-        onValueChange = { viewModel.setHideFromRecents(it) },
+        onValueChange = { isChecked ->
+            performToggleHaptic(view, isChecked)
+            viewModel.setHideFromRecents(isChecked)
+        },
         title = { Text(stringResource(R.string.settings_hide_from_recents_title)) },
         summary = { Text(stringResource(R.string.settings_hide_from_recents_desc)) }
     )
@@ -328,6 +356,7 @@ fun BackgroundSection(viewModel: SettingsViewModel) {
         title = { Text(stringResource(R.string.settings_dont_kill_my_app_title)) },
         summary = { Text(stringResource(R.string.settings_dont_kill_my_app_desc)) },
         onClick = {
+            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
             val url = "https://dontkillmyapp.com/"
             val customTabsIntent = CustomTabsIntent.Builder()
                 .setShowTitle(true)
@@ -339,6 +368,7 @@ fun BackgroundSection(viewModel: SettingsViewModel) {
 
 @Composable
 fun OverlaySection(viewModel: SettingsViewModel) {
+    val view = LocalView.current
     val isServiceRunning by viewModel.isServiceRunning.collectAsState()
     val canOverlay by viewModel.canOverlay.collectAsState()
 
@@ -362,7 +392,10 @@ fun OverlaySection(viewModel: SettingsViewModel) {
     }
     SwitchPreference(
         value = isEnabled,
-        onValueChange = { viewModel.setOverlayEnabled(it) },
+        onValueChange = { isChecked ->
+            performToggleHaptic(view, isChecked)
+            viewModel.setOverlayEnabled(isChecked)
+        },
         enabled = isSwitchEnabled,
         title = { Text(stringResource(R.string.config_enable_overlay)) },
         summary = { Text(summaryText) }
@@ -371,13 +404,19 @@ fun OverlaySection(viewModel: SettingsViewModel) {
     if (isEnabled) {
         SwitchPreference(
             value = isLocked,
-            onValueChange = { viewModel.setOverlayLocked(it) },
+            onValueChange = { isChecked ->
+                performToggleHaptic(view, isChecked)
+                viewModel.setOverlayLocked(isChecked)
+            },
             title = { Text(stringResource(R.string.settings_lock_overlay)) },
             summary = { Text(stringResource(R.string.config_lock_overlay_desc)) }
         )
         SwitchPreference(
             value = isOverlayUseDefaultColors,
-            onValueChange = { viewModel.setOverlayUseDefaultColors(it) },
+            onValueChange = { isChecked ->
+                performToggleHaptic(view, isChecked)
+                viewModel.setOverlayUseDefaultColors(isChecked)
+            },
             title = { Text(stringResource(R.string.settings_overlay_use_default_colors)) },
             summary = { Text(stringResource(R.string.settings_overlay_use_default_colors_desc)) }
         )
@@ -397,7 +436,10 @@ fun OverlaySection(viewModel: SettingsViewModel) {
             value = 0F,
             onValueChange = { },
             sliderValue = cornerRadius.toFloat(),
-            onSliderValueChange = { viewModel.setOverlayCornerRadius(it.toInt()) },
+            onSliderValueChange = {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                viewModel.setOverlayCornerRadius(it.toInt())
+            },
             valueRange = 0f..32f,
             valueSteps = 32,
             title = { Text(stringResource(R.string.settings_overlay_corner_radius)) },
@@ -407,28 +449,40 @@ fun OverlaySection(viewModel: SettingsViewModel) {
             value = 0F,
             onValueChange = { },
             sliderValue = textSize,
-            onSliderValueChange = { viewModel.setOverlayTextSize(it) },
+            onSliderValueChange = {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                viewModel.setOverlayTextSize(it)
+            },
             valueRange = 8f..24f,
             title = { Text(stringResource(R.string.settings_overlay_text_size)) },
             valueText = { Text("${"%.1f".format(Locale.getDefault(), textSize)}sp") }
         )
         TextFieldPreference(
             value = textUp,
-            onValueChange = { viewModel.setOverlayTextUp(it) },
+            onValueChange = {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                viewModel.setOverlayTextUp(it)
+            },
             textToValue = { it },
             title = { Text(stringResource(R.string.settings_text_prefix_up)) },
             summary = { Text(stringResource(R.string.settings_text_prefix_up_desc, textUp)) },
         )
         TextFieldPreference(
             value = textDown,
-            onValueChange = { viewModel.setOverlayTextDown(it) },
+            onValueChange = {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                viewModel.setOverlayTextDown(it)
+            },
             textToValue = { it },
             title = { Text(stringResource(R.string.settings_text_prefix_down)) },
             summary = { Text(stringResource(R.string.settings_text_prefix_down_desc, textDown)) },
         )
         SwitchPreference(
             value = upFirst,
-            onValueChange = { viewModel.setOverlayOrderUpFirst(it) },
+            onValueChange = { isChecked ->
+                performToggleHaptic(view, isChecked)
+                viewModel.setOverlayOrderUpFirst(isChecked)
+            },
             title = { Text(stringResource(R.string.settings_show_up_first)) },
             summary = { Text(stringResource(R.string.settings_show_up_first_desc)) }
         )
@@ -437,8 +491,10 @@ fun OverlaySection(viewModel: SettingsViewModel) {
 
 @Composable
 fun NotificationSection(viewModel: SettingsViewModel) {
+    val view = LocalView.current
     val isEnabled by viewModel.isNotificationEnabled.collectAsState(initial = true)
     val isLiveUpdateEnabled by viewModel.isLiveUpdateEnabled.collectAsState(initial = false)
+    val isShowOnLockscreenEnabled by viewModel.isShowOnLockscreenEnabled.collectAsState(initial = false)
     val textUp by viewModel.notificationTextUp.collectAsState(initial = "▲ ")
     val textDown by viewModel.notificationTextDown.collectAsState(initial = "▼ ")
     val upFirst by viewModel.notificationOrderUpFirst.collectAsState(initial = false)
@@ -447,11 +503,15 @@ fun NotificationSection(viewModel: SettingsViewModel) {
     val unitSize by viewModel.notificationUnitSize.collectAsState(initial = 0.45f)
     val isCompactSpeedTextEnabled by viewModel.isCompactSpeedTextEnabled.collectAsState(initial = true)
     val isBlankNotificationEnabled by viewModel.isBlankNotificationEnabled.collectAsState(initial = false)
+    val isTransparentIconEnabled by viewModel.isNotificationTransparentIconEnabled.collectAsState(initial = false)
 
     PreferenceCategory(title = { Text(stringResource(R.string.settings_category_notification)) })
     SwitchPreference(
         value = isEnabled,
-        onValueChange = { viewModel.setNotificationEnabled(it) },
+        onValueChange = { isChecked ->
+            performToggleHaptic(view, isChecked)
+            viewModel.setNotificationEnabled(isChecked)
+        },
         title = { Text(stringResource(R.string.config_enable_notification)) },
         summary = { Text(stringResource(R.string.config_enable_notification_desc)) }
     )
@@ -459,41 +519,68 @@ fun NotificationSection(viewModel: SettingsViewModel) {
     if (isEnabled) {
         SwitchPreference(
             value = isLiveUpdateEnabled,
-            onValueChange = { viewModel.setLiveUpdateEnabled(it) },
+            onValueChange = { isChecked ->
+                performToggleHaptic(view, isChecked)
+                viewModel.setLiveUpdateEnabled(isChecked)
+            },
             enabled = !isBlankNotificationEnabled,
             title = { Text(stringResource(R.string.config_enable_live_update)) },
             summary = { Text(stringResource(R.string.config_enable_live_update_desc)) }
         )
         SwitchPreference(
+            value = isShowOnLockscreenEnabled,
+            onValueChange = { isChecked ->
+                performToggleHaptic(view, isChecked)
+                viewModel.setShowOnLockscreenEnabled(isChecked)
+            },
+            title = { Text(stringResource(R.string.settings_show_on_lockscreen_title)) },
+            summary = { Text(stringResource(R.string.settings_show_on_lockscreen_desc)) }
+        )
+        SwitchPreference(
             value = isCompactSpeedTextEnabled,
-            onValueChange = { viewModel.setCompactSpeedTextEnabled(it) },
+            onValueChange = { isChecked ->
+                performToggleHaptic(view, isChecked)
+                viewModel.setCompactSpeedTextEnabled(isChecked)
+            },
             title = { Text(stringResource(R.string.settings_compact_speed_text_title)) },
             summary = { Text(stringResource(R.string.settings_compact_speed_text_desc)) }
         )
         SwitchPreference(
             value = isBlankNotificationEnabled,
-            onValueChange = { viewModel.setBlankNotificationEnabled(it) },
+            onValueChange = { isChecked ->
+                performToggleHaptic(view, isChecked)
+                viewModel.setBlankNotificationEnabled(isChecked)
+            },
             enabled = !isLiveUpdateEnabled,
             title = { Text(stringResource(R.string.settings_blank_notification_title)) },
             summary = { Text(stringResource(R.string.settings_blank_notification_desc)) }
         )
         TextFieldPreference(
             value = textUp,
-            onValueChange = { viewModel.setNotificationTextUp(it) },
+            onValueChange = {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                viewModel.setNotificationTextUp(it)
+            },
             textToValue = { it },
             title = { Text(stringResource(R.string.settings_text_prefix_up)) },
             summary = { Text(stringResource(R.string.settings_text_prefix_up_desc, textUp)) },
         )
         TextFieldPreference(
             value = textDown,
-            onValueChange = { viewModel.setNotificationTextDown(it) },
+            onValueChange = {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                viewModel.setNotificationTextDown(it)
+            },
             textToValue = { it },
             title = { Text(stringResource(R.string.settings_text_prefix_down)) },
             summary = { Text(stringResource(R.string.settings_text_prefix_down_desc, textDown)) },
         )
         SwitchPreference(
             value = upFirst,
-            onValueChange = { viewModel.setNotificationOrderUpFirst(it) },
+            onValueChange = { isChecked ->
+                performToggleHaptic(view, isChecked)
+                viewModel.setNotificationOrderUpFirst(isChecked)
+            },
             title = { Text(stringResource(R.string.settings_show_up_first)) },
             summary = { Text(stringResource(R.string.settings_show_up_first_desc)) }
         )
@@ -510,6 +597,7 @@ fun NotificationSection(viewModel: SettingsViewModel) {
         ListPreference(
             value = displayModeLabel,
             onValueChange = {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                 val mode = when (it) {
                     labelUpload -> 1
                     labelDownload -> 2
@@ -531,7 +619,10 @@ fun NotificationSection(viewModel: SettingsViewModel) {
             value = 0F,
             onValueChange = { },
             sliderValue = textSize,
-            onSliderValueChange = { viewModel.setNotificationTextSize(it) },
+            onSliderValueChange = {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                viewModel.setNotificationTextSize(it)
+            },
             valueRange = 0.1f..1.0f,
             title = { Text(stringResource(R.string.settings_notification_text_size)) },
             valueText = { Text("%.2f".format(textSize)) }
@@ -542,7 +633,10 @@ fun NotificationSection(viewModel: SettingsViewModel) {
             value = 0F,
             onValueChange = { },
             sliderValue = unitSize,
-            onSliderValueChange = { viewModel.setNotificationUnitSize(it) },
+            onSliderValueChange = {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                viewModel.setNotificationUnitSize(it)
+            },
             valueRange = 0.1f..1.0f,
             title = { Text(stringResource(R.string.settings_notification_unit_size)) },
             valueText = { Text("%.2f".format(unitSize)) }
@@ -556,7 +650,10 @@ fun NotificationSection(viewModel: SettingsViewModel) {
             value = 0F,
             onValueChange = { },
             sliderValue = threshold.toFloat() / 1024,
-            onSliderValueChange = { viewModel.setNotificationThreshold((it * 1024).toLong()) },
+            onSliderValueChange = {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                viewModel.setNotificationThreshold((it * 1024).toLong())
+            },
             valueRange = 0f..1024f, // 0KB to 1024KB (1MB)
             valueSteps = 20, // 50KB steps roughly
             title = { Text(stringResource(R.string.settings_notification_threshold)) },
@@ -588,6 +685,7 @@ fun NotificationSection(viewModel: SettingsViewModel) {
         TextFieldPreference(
             value = (threshold / 1024).toString(),
             onValueChange = {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                 val kb = it.toLongOrNull()
                 if (kb != null && kb >= 0) {
                     viewModel.setNotificationThreshold(kb * 1024)
@@ -608,6 +706,7 @@ fun NotificationSection(viewModel: SettingsViewModel) {
         ListPreference(
             value = lowTrafficModeLabel,
             onValueChange = {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                 val mode = when (it) {
                     labelDynamic -> 1
                     else -> 0
@@ -637,8 +736,23 @@ fun NotificationSection(viewModel: SettingsViewModel) {
         val notificationColor by viewModel.notificationColor.collectAsState(initial = 0)
 
         SwitchPreference(
+            value = isTransparentIconEnabled,
+            onValueChange = { isChecked ->
+                performToggleHaptic(view, isChecked)
+                viewModel.setNotificationTransparentIconEnabled(isChecked)
+            },
+            enabled = !useCustomColor,
+            title = { Text(stringResource(R.string.settings_notification_transparent_icon_title)) },
+            summary = { Text(stringResource(R.string.settings_notification_transparent_icon_desc)) }
+        )
+
+        SwitchPreference(
             value = useCustomColor,
-            onValueChange = { viewModel.setNotificationUseCustomColor(it) },
+            onValueChange = { isChecked ->
+                performToggleHaptic(view, isChecked)
+                viewModel.setNotificationUseCustomColor(isChecked)
+            },
+            enabled = !isTransparentIconEnabled,
             title = { Text(stringResource(R.string.settings_notification_use_custom_color_title)) },
             summary = { Text(stringResource(R.string.settings_notification_use_custom_color_desc)) }
         )
@@ -646,7 +760,8 @@ fun NotificationSection(viewModel: SettingsViewModel) {
         ColorPreference(
             title = stringResource(R.string.settings_notification_color_title),
             color = Color(notificationColor),
-            enabled = useCustomColor,
+            enabled = useCustomColor && !isTransparentIconEnabled,
+            showAlpha = false,
             onColorSelected = { viewModel.setNotificationColor(it.toArgb()) }
         )
     }
@@ -654,6 +769,7 @@ fun NotificationSection(viewModel: SettingsViewModel) {
 
 @Composable
 fun AboutSection() {
+    val view = LocalView.current
     val uriHandler = LocalUriHandler.current
     PreferenceCategory(title = { Text(stringResource(R.string.settings_category_about)) })
     Preference(
@@ -663,7 +779,10 @@ fun AboutSection() {
     Preference(
         title = { Text(stringResource(R.string.settings_github)) },
         summary = { Text("https://github.com/realMoai/NowbarMeter") },
-        onClick = { uriHandler.openUri("https://github.com/realMoai/NowbarMeter") }
+        onClick = {
+            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            uriHandler.openUri("https://github.com/realMoai/NowbarMeter")
+        }
     )
 }
 
@@ -672,8 +791,10 @@ fun ColorPreference(
     title: String,
     color: Color,
     enabled: Boolean = true,
+    showAlpha: Boolean = true,
     onColorSelected: (Color) -> Unit
 ) {
+    val view = LocalView.current
     var showDialog by remember { mutableStateOf(false) }
 
     val theme = LocalPreferenceTheme.current
@@ -690,7 +811,12 @@ fun ColorPreference(
                     .background(color)
             )
         },
-        onClick = { if (enabled) showDialog = true }
+        onClick = {
+            if (enabled) {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                showDialog = true
+            }
+        }
     )
     if (showDialog) {
         val controller = rememberColorPickerController()
@@ -714,29 +840,34 @@ fun ColorPreference(
                             selectedColor = envelope.color
                         }
                     )
-                    AlphaSlider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp),
-                        controller = controller,
-                    )
+                    if (showAlpha) {
+                        AlphaSlider(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(36.dp),
+                            controller = controller,
+                        )
+                    }
                     BrightnessSlider(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(36.dp),
                         controller = controller,
                     )
-                    AlphaTile(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp)
-                            .clip(MaterialTheme.shapes.medium),
-                        controller = controller
-                    )
+                    if (showAlpha) {
+                        AlphaTile(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(36.dp)
+                                .clip(MaterialTheme.shapes.medium),
+                            controller = controller
+                        )
+                    }
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                     onColorSelected(selectedColor)
                     showDialog = false
                 }) {
@@ -745,11 +876,26 @@ fun ColorPreference(
             },
             dismissButton = {
                 TextButton(onClick = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                     showDialog = false
                 }) {
                     Text(stringResource(android.R.string.cancel))
                 }
             }
         )
+    }
+}
+
+/**
+ * Helper function to perform toggle haptics with API 34+ check.
+ */
+private fun performToggleHaptic(view: android.view.View, isChecked: Boolean) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        view.performHapticFeedback(
+            if (isChecked) HapticFeedbackConstants.TOGGLE_ON 
+            else HapticFeedbackConstants.TOGGLE_OFF
+        )
+    } else {
+        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
     }
 }

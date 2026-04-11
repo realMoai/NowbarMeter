@@ -29,6 +29,8 @@
     <string name="settings_speed_unit_title">网速单位</string>
     <string name="settings_speed_unit_desc">锁定网速显示的计量单位</string>
     <string name="settings_speed_unit_auto">自动</string>
+    <string name="settings_oled_theme_title">OLED 主题</string>
+    <string name="settings_oled_theme_desc">为 OLED 屏幕启用纯黑主题</string>
     <string name="settings_auto_start_service_title">自动启动监听服务</string>
     <string name="settings_auto_start_service_desc">开机后自动启动网速监听服务</string>
     <string name="settings_auto_start_disabled_reason">需要悬浮窗或通知权限</string>
@@ -52,8 +54,12 @@
     <string name="settings_show_up_first">优先显示上行</string>
     <string name="settings_show_up_first_desc">上行流量显示在前面</string>
     <string name="settings_category_notification">通知设置</string>
-    <string name="config_enable_live_update">启用实时更新</string>
-    <string name="config_enable_live_update_desc">使用实时网速更新通知栏 (需要 Android 16+ 版本)</string>
+    <string name="config_enable_live_update">Now Bar 适配</string>
+    <string name="config_enable_live_update_desc">使用状态栏胶囊显示 (需要 OneUI 7+)</string>
+    <string name="settings_compact_speed_text_title">紧凑网速文本</string>
+    <string name="settings_compact_speed_text_desc">当网速 >= 10 时隐藏小数位，确保文字能放入图标</string>
+    <string name="settings_blank_notification_title">空白通知</string>
+    <string name="settings_blank_notification_desc">隐藏通知内容以保持通知栏整洁</string>
     <string name="settings_notification_display_mode">显示内容</string>
     <string name="settings_display_mode_total">显示总网速</string>
     <string name="settings_display_mode_upload">仅显示上行网速</string>
@@ -68,11 +74,15 @@
     <string name="settings_notification_low_traffic_mode">低流量模式动作</string>
     <string name="settings_notification_low_traffic_mode_static">显示静态图标</string>
     <string name="settings_notification_low_traffic_mode_dynamic">显示动态网速</string>
-    <string name="settings_notification_low_traffic_mode_explanation">静态：显示应用图标。\n动态：显示实时网速(如 0K/s)。\n注意：切换此选项需等待两个统计周期生效。</string>
+    <string name="settings_notification_low_traffic_mode_explanation">静态：显示应用图标。\n动态：显示实时网速(如 0K/s)。\n隐藏：从状态栏移除图标。\n注意：切换此选项需等待两个统计周期生效。</string>
     <string name="settings_notification_use_custom_color_title">自定义通知颜色</string>
-    <string name="settings_notification_use_custom_color_desc">设置通知栏网速图标的颜色（在某些ROM上可能会有奇效）</string>
+    <string name="settings_notification_use_custom_color_desc">设置通知栏网速图标的颜色</string>
+    <string name="settings_notification_transparent_icon_title">透明通知图标</string>
+    <string name="settings_notification_transparent_icon_desc">强制通知图标背景透明</string>
     <string name="settings_notification_color_title">通知颜色</string>
-    <string name="settings_category_background">后台配置</string>
+    <string name="settings_show_on_lockscreen_title">锁屏显示</string>
+    <string name="settings_show_on_lockscreen_desc">在安全锁屏界面显示通知内容</string>
+    <string name="settings_category_background">后台设置</string>
     <string name="settings_ignore_battery_optimizations_title">忽略电池优化</string>
     <string name="settings_ignore_battery_optimizations_on">已忽略优化</string>
     <string name="settings_ignore_battery_optimizations_off">未忽略优化</string>
@@ -100,4 +110,7 @@
     <string name="tile_notification_label">通知栏显示</string>
     <string name="tile_desc_active">已开启</string>
     <string name="tile_desc_inactive">已关闭</string>
+
+    <string name="battery_optimization_warning_title">后台运行受限</string>
+    <string name="battery_optimization_warning_subtitle">点击禁用电池优化，以防网速监听停止工作。</string>
 </resources>
